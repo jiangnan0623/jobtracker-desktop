@@ -69,9 +69,9 @@
       </el-table-column>
       <el-table-column prop="currentStatus" label="状态" width="130">
         <template #default="{ row }">
-          <span v-if="!row.isGroup" class="status-pill" :class="statusMeta(row.currentStatus).className">
-            <el-icon><component :is="statusMeta(row.currentStatus).icon" /></el-icon>
-            <span>{{ row.currentStatus }}</span>
+          <span v-if="!row.isGroup" class="status-pill" :class="statusMeta(displayStatus(row)).className">
+            <el-icon><component :is="statusMeta(displayStatus(row)).icon" /></el-icon>
+            <span>{{ displayStatus(row) }}</span>
           </span>
         </template>
       </el-table-column>
@@ -347,13 +347,52 @@ function tagStyle(value: string) {
   return { color: item.color, backgroundColor: item.bg, borderColor: item.border }
 }
 
-function parseProgressFlow(value?: string) {
+type ProgressStep = { name: string; result?: string; operatedTime?: string }
+
+function parseProgressSteps(value?: string): ProgressStep[] {
   if (!value?.trim()) return []
-  return value.split('\n')
+  const raw = value.trim()
+  if (raw.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => ({
+            name: String(item?.name || '').trim(),
+            result: String(item?.result || '').trim() || undefined,
+            operatedTime: String(item?.operatedTime || '').trim() || undefined
+          }))
+          .filter((item) => item.name)
+      }
+    } catch {
+      // 兼容旧文本格式，失败后继续按行解析。
+    }
+  }
+  return raw.split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => line.split('|')[0].trim())
-    .filter(Boolean)
+    .map((line) => ({ name: line.split('|')[0].trim() }))
+    .filter((item) => item.name)
+}
+
+function parseProgressFlow(value?: string) {
+  return parseProgressSteps(value).map((item) => item.name)
+}
+
+function statusFromProgressJson(value?: string) {
+  const steps = parseProgressSteps(value)
+  if (!steps.length) return ''
+  return [...steps].reverse().find((item) => item.operatedTime || item.result)?.name || steps[0].name
+}
+
+function normalizedCurrentStatus(row: JobApplication) {
+  const value = row.currentStatus || ''
+  if (!value.trim().startsWith('[')) return value
+  return statusFromProgressJson(value) || statusFromProgressJson(row.progressFlow) || '待投递'
+}
+
+function displayStatus(row: JobApplication) {
+  return normalizedCurrentStatus(row) || '待投递'
 }
 
 function openCreate() {
@@ -377,6 +416,11 @@ function openCreate() {
 
 function openEdit(row: JobApplication) {
   Object.assign(form, row)
+  form.currentStatus = normalizedCurrentStatus(row)
+  const options = parseProgressFlow(row.progressFlow)
+  if (options.length && !options.includes(form.currentStatus)) {
+    form.currentStatus = statusFromProgressJson(row.progressFlow) || options[0]
+  }
   formPositionTypes.value = splitMultiValue(row.positionType)
   formResumeCategories.value = splitMultiValue(row.resumeCategory)
   dialogVisible.value = true

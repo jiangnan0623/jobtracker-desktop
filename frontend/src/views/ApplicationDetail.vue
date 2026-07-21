@@ -10,7 +10,10 @@
         </span>
       </el-descriptions-item>
       <el-descriptions-item label="进度结果">
-        <el-tag :type="resultMeta(application.progressResult).type">{{ application.progressResult || '进行中' }}</el-tag>
+        <el-tag v-if="isTerminalStatus(application.currentStatus)" :type="terminalMeta(application.currentStatus).type">
+          {{ terminalMeta(application.currentStatus).label }}
+        </el-tag>
+        <el-tag v-else :type="resultMeta(application.progressResult).type">{{ application.progressResult || '进行中' }}</el-tag>
       </el-descriptions-item>
       <el-descriptions-item label="操作时间">{{ formatDate(application.progressOperatedTime) || '-' }}</el-descriptions-item>
       <el-descriptions-item label="岗位类别">{{ application.positionType || '-' }}</el-descriptions-item>
@@ -38,21 +41,6 @@
       <el-button @click="openProgressDialog">编辑流程</el-button>
     </div>
 
-    <div v-if="selectedProgressName" class="progress-manager">
-      <el-select v-model="progressForm.currentStatus" filterable placeholder="当前进度">
-        <el-option v-for="item in flowSteps" :key="item.name" :label="item.name" :value="item.name" />
-      </el-select>
-      <el-segmented v-model="progressForm.progressResult" :options="progressResultOptions" />
-      <el-date-picker
-        v-model="progressForm.progressOperatedTime"
-        type="datetime"
-        value-format="YYYY-MM-DDTHH:mm:ss"
-        placeholder="操作时间"
-      />
-      <el-button type="primary" @click="saveCurrentProgress">保存进度</el-button>
-      <el-button @click="closeProgressManager">取消</el-button>
-    </div>
-
     <el-timeline class="status-timeline">
       <el-timeline-item
         v-for="item in progressItems"
@@ -69,14 +57,47 @@
         >
           <div class="timeline-title">
             <strong>{{ item.name }}</strong>
-            <el-tag v-if="item.current" size="small" :type="resultMeta(application.progressResult).type">
-              {{ application.progressResult || '进行中' }}
+            <el-tag v-if="item.terminalLabel" size="small" :type="item.terminalType">
+              {{ item.terminalLabel }}
+            </el-tag>
+            <el-tag v-else-if="item.result" size="small" :type="resultMeta(item.result).type">
+              {{ item.result }}
             </el-tag>
           </div>
           <span>{{ item.description }}</span>
-          <span v-if="item.current && application.progressOperatedTime" class="muted">
-            操作时间：{{ formatDate(application.progressOperatedTime) }}
+          <span v-if="item.operatedTime" class="muted">
+            操作时间：{{ formatDate(item.operatedTime) }}
           </span>
+          <span v-else-if="item.active" class="muted">
+            操作时间：未记录
+          </span>
+          <div v-if="item.name === selectedProgressName" class="progress-manager inline-progress-manager" @click.stop>
+            <el-select v-model="progressForm.currentStatus" filterable placeholder="当前进度">
+              <el-option
+                v-for="option in selectableProgressSteps"
+                :key="option.name"
+                :label="option.disabled ? `${option.name}（由失败自动产生）` : option.name"
+                :value="option.name"
+                :disabled="option.disabled"
+              />
+            </el-select>
+            <el-segmented
+              v-if="!isTerminalStatus(progressForm.currentStatus)"
+              v-model="progressForm.progressResult"
+              :options="progressResultOptions"
+            />
+            <el-tag v-else :type="terminalMeta(progressForm.currentStatus).type" effect="light">
+              {{ terminalMeta(progressForm.currentStatus).label }}
+            </el-tag>
+            <el-date-picker
+              v-model="progressForm.progressOperatedTime"
+              type="datetime"
+              value-format="YYYY-MM-DDTHH:mm:ss"
+              placeholder="操作时间"
+            />
+            <el-button type="primary" @click="saveCurrentProgress">保存进度</el-button>
+            <el-button @click="closeProgressManager">取消</el-button>
+          </div>
         </div>
       </el-timeline-item>
     </el-timeline>
@@ -204,7 +225,7 @@ import { applicationApi, interviewApi, noteApi, resumeApi } from '../api'
 import type { InterviewNote, InterviewRecord, JobApplication } from '../types'
 import { formatDateTime } from '../utils/time'
 
-type ProgressStep = { name: string; description: string }
+type ProgressStep = { name: string; description: string; result?: string; operatedTime?: string }
 
 const route = useRoute()
 const jobId = Number(route.params.id)
@@ -234,6 +255,7 @@ const progressForm = reactive({
   progressOperatedTime: ''
 })
 const progressResultOptions = ['进行中', '成功', '失败']
+const terminalStatuses = ['Offer', '淘汰']
 const preview = computed(() => md.render(noteForm.content || ''))
 const notePreviewHtml = computed(() => md.render(notePreviewContent.value || ''))
 const jobDescriptionHtml = computed(() => md.render(application.value.jobDescription || ''))
@@ -271,6 +293,10 @@ const statusConfig: Record<string, any> = {
 }
 
 const flowSteps = computed(() => parseProgressFlow(application.value.progressFlow))
+const selectableProgressSteps = computed(() => flowSteps.value.map((item) => ({
+  ...item,
+  disabled: item.name === '淘汰'
+})))
 const progressDialogSteps = computed(() => parseProgressFlow(progressText.value))
 const progressMismatch = computed(() => {
   const current = application.value.currentStatus
@@ -279,17 +305,27 @@ const progressMismatch = computed(() => {
 const progressItems = computed(() => {
   const current = application.value.currentStatus || '待投递'
   const currentIndex = flowSteps.value.findIndex((item) => item.name === current)
+  const failedIndex = findFailedStepIndex(flowSteps.value)
+  const activeEndIndex = current === '淘汰' ? failedIndex : current === 'Offer' ? findLastRecordedNormalIndex(flowSteps.value) : currentIndex
   return flowSteps.value.map((item, index) => {
     const meta = statusMeta(item.name)
     const isCurrent = item.name === current
-    const active = current === '淘汰' ? item.name === '淘汰' || index <= Math.max(currentIndex, 2) : currentIndex >= 0 && index <= currentIndex
+    const operatedTime = item.operatedTime || rawTimestampFor(item.name) || (isCurrent ? application.value.progressOperatedTime : '')
+    const hasRecordedTime = Boolean(operatedTime)
+    const result = isTerminalStatus(item.name) ? '' : item.result || (isCurrent ? application.value.progressResult || '进行中' : '')
+    const active = isCurrent || hasRecordedTime || (activeEndIndex >= 0 && index <= activeEndIndex && !isTerminalStatus(item.name))
+    const terminal = isTerminalStatus(item.name) && (isCurrent || hasRecordedTime)
     return {
       ...item,
+      result,
+      operatedTime,
+      terminalLabel: terminal ? terminalMeta(item.name).label : '',
+      terminalType: terminal ? terminalMeta(item.name).type : '',
       active,
       current: isCurrent,
-      color: timelineColor(active, isCurrent, meta.color),
+      color: timelineColor(active, meta.color, result, item.name),
       icon: meta.icon,
-      timestamp: timestampFor(item.name)
+      timestamp: formatDate(operatedTime)
     }
   })
 })
@@ -313,9 +349,10 @@ async function load() {
 
 function syncProgressForm(statusName = application.value.currentStatus) {
   const isCurrent = statusName === application.value.currentStatus
+  const step = flowSteps.value.find((item) => item.name === statusName)
   progressForm.currentStatus = statusName || flowSteps.value[0]?.name || '待投递'
-  progressForm.progressResult = isCurrent ? application.value.progressResult || '进行中' : '进行中'
-  progressForm.progressOperatedTime = isCurrent ? application.value.progressOperatedTime || nowValue() : nowValue()
+  progressForm.progressResult = isTerminalStatus(progressForm.currentStatus) ? '' : step?.result || (isCurrent ? application.value.progressResult || '进行中' : '进行中')
+  progressForm.progressOperatedTime = step?.operatedTime || rawTimestampFor(progressForm.currentStatus) || (isCurrent ? application.value.progressOperatedTime || nowValue() : nowValue())
 }
 
 function statusMeta(status?: string) {
@@ -328,14 +365,49 @@ function resultMeta(result?: string) {
   return { type: 'info', color: '#409eff' }
 }
 
-function timelineColor(active: boolean, current: boolean, fallback: string) {
+function terminalMeta(status?: string) {
+  if (status === 'Offer') return { type: 'success', color: '#16a34a', label: '已获得 Offer' }
+  if (status === '淘汰') return { type: 'danger', color: '#dc2626', label: '流程结束' }
+  return { type: 'info', color: '#409eff', label: '' }
+}
+
+function isTerminalStatus(status?: string) {
+  return terminalStatuses.includes(status || '')
+}
+
+function timelineColor(active: boolean, fallback: string, result?: string, status?: string) {
   if (!active) return '#d0d5dd'
-  if (current && application.value.progressResult) return resultMeta(application.value.progressResult).color
+  if (isTerminalStatus(status)) return terminalMeta(status).color
+  if (result) return resultMeta(result).color
   return fallback
 }
 
-function parseProgressFlow(value?: string) {
-  if (!value?.trim()) return defaultProgress
+function parseProgressFlow(value?: string): ProgressStep[] {
+  if (!value?.trim()) return cloneProgress(defaultProgress)
+  const raw = value.trim()
+  if (raw.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        const steps = parsed
+          .map((item) => ({
+            name: String(item?.name || '').trim(),
+            description: String(item?.description || '').trim() || '自定义流程节点',
+            result: String(item?.result || '').trim() || undefined,
+            operatedTime: String(item?.operatedTime || '').trim() || undefined
+          }))
+          .filter((item) => item.name)
+        if (steps.length) return steps
+      }
+    } catch {
+      // 兼容旧文本格式，JSON 解析失败时继续按文本流程读取。
+    }
+  }
+  return parseProgressText(value)
+}
+
+function parseProgressText(value?: string): ProgressStep[] {
+  if (!value?.trim()) return cloneProgress(defaultProgress)
   return value.split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
@@ -345,12 +417,21 @@ function parseProgressFlow(value?: string) {
     })
 }
 
-function stringifyProgressFlow(items = defaultProgress) {
+function stringifyProgressFlow(items: ProgressStep[] = defaultProgress) {
+  return JSON.stringify(items.map((item) => ({
+    name: item.name,
+    description: item.description,
+    result: item.result || undefined,
+    operatedTime: item.operatedTime || undefined
+  })))
+}
+
+function stringifyProgressText(items: ProgressStep[] = defaultProgress) {
   return items.map((item) => `${item.name} | ${item.description}`).join('\n')
 }
 
 function openProgressDialog() {
-  progressText.value = application.value.progressFlow || stringifyProgressFlow()
+  progressText.value = stringifyProgressText(flowSteps.value)
   const current = application.value.currentStatus || ''
   const steps = parseProgressFlow(progressText.value)
   progressStatusAfterSave.value = steps.some((item) => item.name === current) ? current : steps[0]?.name || ''
@@ -358,13 +439,13 @@ function openProgressDialog() {
 }
 
 function resetProgressFlow() {
-  progressText.value = stringifyProgressFlow()
+  progressText.value = stringifyProgressText(defaultProgress)
   const current = application.value.currentStatus || ''
   progressStatusAfterSave.value = defaultProgress.some((item) => item.name === current) ? current : defaultProgress[0].name
 }
 
 async function saveProgressFlow() {
-  const steps = parseProgressFlow(progressText.value)
+  const steps = mergeProgressMetadata(parseProgressText(progressText.value), flowSteps.value)
   if (!steps.length) {
     ElMessage.warning('请至少保留一个流程阶段')
     return
@@ -374,13 +455,30 @@ async function saveProgressFlow() {
     ElMessage.warning('请选择一个流程中的阶段作为当前状态')
     return
   }
-  const operatedTime = currentStatus === application.value.currentStatus ? application.value.progressOperatedTime : nowValue()
+  const target = steps.find((item) => item.name === currentStatus)!
+  if (currentStatus === '淘汰' && !findFailedStep(steps)) {
+    ElMessage.warning('没有失败环节时，不能将流程标记为淘汰。请先在实际失败的环节选择“失败”。')
+    return
+  }
+  if (currentStatus === 'Offer' && findFailedStep(steps)) {
+    ElMessage.warning('当前流程已有失败环节，不能再标记为 Offer。请先修改失败环节。')
+    return
+  }
+  target.result = isTerminalStatus(currentStatus) ? undefined : target.result || (currentStatus === application.value.currentStatus ? application.value.progressResult || '进行中' : '进行中')
+  target.operatedTime = target.operatedTime || (currentStatus === application.value.currentStatus ? application.value.progressOperatedTime : '') || nowValue()
+  const timeError = validateProgressTimes(steps)
+  if (timeError) {
+    ElMessage.warning(timeError)
+    return
+  }
+  const nextStatus = resolveCurrentStatus(currentStatus, steps)
+  const statusStep = steps.find((item) => item.name === nextStatus)
   await applicationApi.update(jobId, {
     ...application.value,
-    currentStatus,
-    progressResult: currentStatus === application.value.currentStatus ? application.value.progressResult || '进行中' : '进行中',
-    progressOperatedTime: operatedTime,
-    progressFlow: progressText.value
+    currentStatus: nextStatus,
+    progressResult: statusStep?.result || '',
+    progressOperatedTime: statusStep?.operatedTime || target.operatedTime,
+    progressFlow: stringifyProgressFlow(steps)
   })
   progressVisible.value = false
   await load()
@@ -400,11 +498,35 @@ async function saveCurrentProgress() {
     ElMessage.warning('请选择当前进度')
     return
   }
+  const steps = cloneProgress(flowSteps.value)
+  const target = steps.find((item) => item.name === progressForm.currentStatus)
+  if (!target) {
+    ElMessage.warning('当前进度不在流程中，请先编辑流程')
+    return
+  }
+  if (progressForm.currentStatus === '淘汰') {
+    ElMessage.warning('淘汰不能直接选择。请在实际失败的环节选择“失败”，系统会自动标记为淘汰。')
+    return
+  }
+  if (progressForm.currentStatus === 'Offer' && findFailedStep(steps)) {
+    ElMessage.warning('当前流程已有失败环节，不能再标记为 Offer。请先修改失败环节。')
+    return
+  }
+  target.result = isTerminalStatus(progressForm.currentStatus) ? undefined : progressForm.progressResult || '进行中'
+  target.operatedTime = progressForm.progressOperatedTime || nowValue()
+  const timeError = validateProgressTimes(steps)
+  if (timeError) {
+    ElMessage.warning(timeError)
+    return
+  }
+  const nextStatus = resolveCurrentStatus(progressForm.currentStatus, steps)
+  const statusStep = steps.find((item) => item.name === nextStatus)
   await applicationApi.update(jobId, {
     ...application.value,
-    currentStatus: progressForm.currentStatus,
-    progressResult: progressForm.progressResult,
-    progressOperatedTime: progressForm.progressOperatedTime || nowValue()
+    currentStatus: nextStatus,
+    progressResult: statusStep?.result || '',
+    progressOperatedTime: statusStep?.operatedTime || target.operatedTime,
+    progressFlow: stringifyProgressFlow(steps)
   })
   ElMessage.success('进度已更新')
   selectedProgressName.value = ''
@@ -421,10 +543,91 @@ function nowValue() {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
 
-function timestampFor(status: string) {
-  if (status === '已投递') return formatDate(application.value.appliedTime)
+function cloneProgress(items: ProgressStep[]) {
+  return items.map((item) => ({ ...item }))
+}
+
+function mergeProgressMetadata(nextSteps: ProgressStep[], oldSteps: ProgressStep[]) {
+  return nextSteps.map((step) => {
+    const old = oldSteps.find((item) => item.name === step.name)
+    return {
+      ...step,
+      result: old?.result,
+      operatedTime: old?.operatedTime
+    }
+  })
+}
+
+function validateProgressTimes(steps: ProgressStep[]) {
+  let previous: { name: string; time: number } | null = null
+  for (const step of steps) {
+    if (isTerminalStatus(step.name)) continue
+    if (!step.operatedTime) continue
+    const time = new Date(step.operatedTime).getTime()
+    if (Number.isNaN(time)) return `${step.name} 的操作时间格式不正确`
+    if (previous && time <= previous.time) {
+      return `${step.name} 的操作时间必须晚于 ${previous.name}`
+    }
+    previous = { name: step.name, time }
+  }
+  return ''
+}
+
+function findFailedStep(steps: ProgressStep[]) {
+  return [...steps].reverse().find((step) => !isTerminalStatus(step.name) && step.result === '失败')
+}
+
+function findFailedStepIndex(steps: ProgressStep[]) {
+  for (let index = steps.length - 1; index >= 0; index -= 1) {
+    const step = steps[index]
+    if (!isTerminalStatus(step.name) && step.result === '失败') return index
+  }
+  return -1
+}
+
+function findLastRecordedNormalIndex(steps: ProgressStep[]) {
+  for (let index = steps.length - 1; index >= 0; index -= 1) {
+    const step = steps[index]
+    if (isTerminalStatus(step.name)) continue
+    if (step.operatedTime || rawTimestampFor(step.name)) return index
+  }
+  return -1
+}
+
+function resolveCurrentStatus(selectedStatus: string, steps: ProgressStep[]) {
+  const failed = findFailedStep(steps)
+  const rejected = steps.find((item) => item.name === '淘汰')
+  const offer = steps.find((item) => item.name === 'Offer')
+  if (failed) {
+    if (rejected) {
+      rejected.result = undefined
+      rejected.operatedTime = failed.operatedTime || nowValue()
+    }
+    if (offer) {
+      offer.result = undefined
+      offer.operatedTime = undefined
+    }
+    return '淘汰'
+  }
+  if (rejected) {
+    rejected.result = undefined
+    rejected.operatedTime = undefined
+  }
+  if (selectedStatus !== 'Offer' && offer) {
+    offer.result = undefined
+    offer.operatedTime = undefined
+  }
+  return selectedStatus
+}
+
+function rawTimestampFor(status: string) {
+  if (status === '已投递') return application.value.appliedTime || ''
   const interview = detail.value.interviewRecords?.find((item: InterviewRecord) => item.round === status)
-  return interview ? formatDate(interview.interviewTime) : ''
+  return interview?.interviewTime || ''
+}
+
+function timestampFor(status: string) {
+  return formatDate(rawTimestampFor(status))
 }
 
 function openInterview() {

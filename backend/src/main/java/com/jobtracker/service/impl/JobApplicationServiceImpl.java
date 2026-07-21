@@ -3,6 +3,8 @@ package com.jobtracker.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobtracker.dto.ApplicationQueryDTO;
 import com.jobtracker.entity.InterviewNote;
 import com.jobtracker.entity.InterviewRecord;
@@ -21,6 +23,7 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -40,6 +43,7 @@ public class JobApplicationServiceImpl extends ServiceImpl<JobApplicationMapper,
     private final InterviewRecordService interviewRecordService;
     private final InterviewNoteService interviewNoteService;
     private final ResumeService resumeService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public Page<JobApplication> pageApplications(ApplicationQueryDTO query) {
@@ -91,12 +95,7 @@ public class JobApplicationServiceImpl extends ServiceImpl<JobApplicationMapper,
         List<JobApplication> applications = list();
         for (JobApplication application : applications) {
             addOption(options, application.getCurrentStatus());
-            if (StringUtils.hasText(application.getProgressFlow())) {
-                for (String line : application.getProgressFlow().split("\\R")) {
-                    String status = line.split("\\|", 2)[0].trim();
-                    addOption(options, status);
-                }
-            }
+            addProgressFlowOptions(options, application.getProgressFlow());
         }
         return new ArrayList<>(options);
     }
@@ -141,6 +140,30 @@ public class JobApplicationServiceImpl extends ServiceImpl<JobApplicationMapper,
         }
         for (String item : value.split("[、,，;；]")) {
             addOption(options, item);
+        }
+    }
+
+    private void addProgressFlowOptions(Set<String> options, String progressFlow) {
+        if (!StringUtils.hasText(progressFlow)) {
+            return;
+        }
+        String trimmed = progressFlow.trim();
+        if (trimmed.startsWith("[")) {
+            try {
+                List<Map<String, Object>> steps = objectMapper.readValue(trimmed, new TypeReference<>() {
+                });
+                for (Map<String, Object> step : steps) {
+                    Object name = step.get("name");
+                    addOption(options, name == null ? null : String.valueOf(name));
+                }
+                return;
+            } catch (Exception ignored) {
+                // Fallback to the legacy line format below.
+            }
+        }
+        for (String line : progressFlow.split("\\R")) {
+            String status = line.split("\\|", 2)[0].trim();
+            addOption(options, status);
         }
     }
 }
