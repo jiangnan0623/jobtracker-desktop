@@ -1,0 +1,21 @@
+package com.jobtracker.controller;
+
+import com.jobtracker.common.Result;
+import com.jobtracker.service.DashboardService;
+import com.jobtracker.vo.DashboardVO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/dashboard")
+public class DashboardController {
+    private final DashboardService dashboardService;
+
+    @GetMapping
+    public Result<DashboardVO> overview() {
+        return Result.ok(dashboardService.overview());
+    }
+}

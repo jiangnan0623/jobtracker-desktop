@@ -1,0 +1,40 @@
+# Build output
+backend/target/
+backend/maven-repo/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+
+desktop/release/
+desktop/resources/backend/
+desktop/resources/runtime/
+
+# Dependencies
+frontend/node_modules/
+desktop/node_modules/
+
+# Local runtime data
+data/
+backend/data/
+desktop-test-data/
+desktop-test-data-warning/
+*.log
+*.pid
+*.tmp
+
+# Local machine config
+backend/settings.xml
+/package-lock.json
+
+# IDE / tooling
+.idea/
+.vscode/
+.agents/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local env
+.env
+.env.*
+*.local
