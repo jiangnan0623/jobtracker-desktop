@@ -204,6 +204,23 @@ storage.properties        保存目录配置
 
 请确保 `java`、`mvn`、`node`、`npm` 可以在终端中正常使用。也可以在执行打包脚本时通过参数传入本机 Maven 和 JDK 工具路径。
 
+
+## 本地配置
+
+桌面端打包和正常运行时使用 `desktop` profile，默认是 H2 本地文件数据库，一般不需要配置 MySQL 密码。
+
+如果把 `backend` 当作 Web 后端连接本机 MySQL 运行，可以复制 Spring Boot 配置模板，并填写本机 MySQL 密码：
+
+```powershell
+Copy-Item backend\src\main\resources\application.example.yml backend\src\main\resources\application.yml
+```
+
+启动 MySQL 版后端时使用 `local` profile：
+
+```powershell
+cd <PROJECT_ROOT>\backend
+mvn spring-boot:run
+```
 ## 本地开发运行
 
 ### 后端
@@ -303,3 +320,6 @@ storage.properties
 - 修改保存位置只影响新文件，不自动迁移旧文件。
 - 删除文件夹会同时删除其子项目，请谨慎操作。
 - 当前安装包未配置自定义应用图标，Electron Builder 会使用默认图标。
+
+
+
