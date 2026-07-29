@@ -117,5 +117,4 @@ CREATE TABLE IF NOT EXISTS reminder (
 
 CREATE INDEX IF NOT EXISTS idx_reminder_time ON reminder (remind_time);
 CREATE INDEX IF NOT EXISTS idx_reminder_status ON reminder (status);
-CREATE INDEX IF NOT EXISTS idx_reminder_related_application ON reminder (related_application_id);
 CREATE INDEX IF NOT EXISTS idx_reminder_deleted ON reminder (deleted);
