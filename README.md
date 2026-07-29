@@ -51,13 +51,8 @@ JobTrackerDesktop/
 │  ├─ index.html            前端入口页面
 │  ├─ package.json          前端依赖配置
 │  └─ vite.config.ts        Vite 配置
-├─ desktop/                 Electron 桌面客户端源码
-│  ├─ main.js               Electron 主进程
-│  ├─ preload.js            桌面端桥接能力
-│  └─ package.json          桌面端依赖配置
 ├─ database/                数据库建表和迁移脚本
 ├─ END_USER_MANUAL.md       面向最终用户的使用说明
-├─ RELEASE_NOTES_0.1.1.md   版本功能说明
 ├─ .gitignore               Git 忽略规则
 └─ README.md                项目说明
 ```
@@ -212,7 +207,6 @@ http://localhost:8080
 ## 文档
 
 - `END_USER_MANUAL.md`：面向最终用户的完整使用说明。
-- `RELEASE_NOTES_0.1.1.md`：当前版本主要新增功能说明。
 
 ## 备份建议
 

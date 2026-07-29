@@ -7,6 +7,7 @@ frontend/tsconfig.tsbuildinfo
 desktop/release/
 desktop/resources/backend/
 desktop/resources/runtime/
+desktop/
 
 # Dependencies
 frontend/node_modules/
