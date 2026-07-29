@@ -1,10 +1,14 @@
 package com.jobtracker.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jobtracker.config.StorageProperties;
+import com.jobtracker.entity.JobApplication;
 import com.jobtracker.entity.Resume;
+import com.jobtracker.mapper.JobApplicationMapper;
 import com.jobtracker.mapper.ResumeMapper;
 import com.jobtracker.service.ResumeService;
+import com.jobtracker.vo.ResumeUsageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -17,13 +21,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume> implements ResumeService {
     private static final Set<String> ALLOWED_TYPES = Set.of("pdf", "doc", "docx");
     private final StorageProperties storageProperties;
+    private final JobApplicationMapper jobApplicationMapper;
 
     @Override
     public Resume upload(MultipartFile file, String versionName, String remark) {
@@ -65,6 +75,55 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume> impleme
         resume.setRemark(remark);
         updateById(resume);
         return resume;
+    }
+
+    @Override
+    public List<ResumeUsageVO> usage() {
+        return new ArrayList<>(usageMap().values());
+    }
+
+    @Override
+    public Map<Long, ResumeUsageVO> usageMap() {
+        Map<Long, ResumeUsageVO> result = list().stream()
+                .collect(Collectors.toMap(
+                        Resume::getId,
+                        resume -> {
+                            ResumeUsageVO vo = new ResumeUsageVO();
+                            vo.setResumeId(resume.getId());
+                            vo.setBindCount(0);
+                            vo.setApplications(new ArrayList<>());
+                            return vo;
+                        },
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
+        if (result.isEmpty()) {
+            return result;
+        }
+
+        List<JobApplication> applications = jobApplicationMapper.selectList(new LambdaQueryWrapper<JobApplication>()
+                .in(JobApplication::getResumeId, result.keySet())
+                .orderByDesc(JobApplication::getAppliedTime)
+                .orderByDesc(JobApplication::getUpdatedTime));
+        for (JobApplication application : applications) {
+            if (application.getResumeId() == null) {
+                continue;
+            }
+            ResumeUsageVO usage = result.get(application.getResumeId());
+            if (usage == null) {
+                continue;
+            }
+            ResumeUsageVO.ApplicationUsage item = new ResumeUsageVO.ApplicationUsage();
+            item.setId(application.getId());
+            item.setCompanyName(application.getCompanyName());
+            item.setPositionName(application.getPositionName());
+            item.setCurrentStatus(application.getCurrentStatus());
+            usage.getApplications().add(item);
+        }
+        for (ResumeUsageVO item : result.values()) {
+            item.setBindCount(item.getApplications().size());
+        }
+        return result;
     }
 
     @Override

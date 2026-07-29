@@ -3,6 +3,7 @@ package com.jobtracker.controller;
 import com.jobtracker.common.Result;
 import com.jobtracker.entity.Resume;
 import com.jobtracker.service.ResumeService;
+import com.jobtracker.vo.ResumeUsageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,11 @@ public class ResumeController {
     @GetMapping
     public Result<List<Resume>> list() {
         return Result.ok(resumeService.list());
+    }
+
+    @GetMapping("/usage")
+    public Result<List<ResumeUsageVO>> usage() {
+        return Result.ok(resumeService.usage());
     }
 
     @PostMapping("/upload")

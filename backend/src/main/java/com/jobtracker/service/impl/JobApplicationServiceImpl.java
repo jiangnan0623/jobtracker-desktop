@@ -9,11 +9,13 @@ import com.jobtracker.dto.ApplicationQueryDTO;
 import com.jobtracker.entity.InterviewNote;
 import com.jobtracker.entity.InterviewRecord;
 import com.jobtracker.entity.JobApplication;
+import com.jobtracker.entity.Reminder;
 import com.jobtracker.entity.Resume;
 import com.jobtracker.mapper.JobApplicationMapper;
 import com.jobtracker.service.InterviewNoteService;
 import com.jobtracker.service.InterviewRecordService;
 import com.jobtracker.service.JobApplicationService;
+import com.jobtracker.service.ReminderService;
 import com.jobtracker.service.ResumeService;
 import com.jobtracker.vo.ApplicationDetailVO;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,7 @@ public class JobApplicationServiceImpl extends ServiceImpl<JobApplicationMapper,
     private final InterviewRecordService interviewRecordService;
     private final InterviewNoteService interviewNoteService;
     private final ResumeService resumeService;
+    private final ReminderService reminderService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -80,12 +83,17 @@ public class JobApplicationServiceImpl extends ServiceImpl<JobApplicationMapper,
         }
         List<InterviewRecord> records = interviewRecordService.listByJobId(id);
         List<InterviewNote> notes = interviewNoteService.listByJobId(id);
+        List<Reminder> relatedSchedules = reminderService.lambdaQuery()
+                .eq(Reminder::getRelatedApplicationId, id)
+                .orderByAsc(Reminder::getRemindTime)
+                .list();
         Resume resume = application.getResumeId() == null ? null : resumeService.getById(application.getResumeId());
         ApplicationDetailVO vo = new ApplicationDetailVO();
         vo.setApplication(application);
         vo.setResume(resume);
         vo.setInterviewRecords(records);
         vo.setInterviewNotes(notes);
+        vo.setRelatedSchedules(relatedSchedules);
         return vo;
     }
 

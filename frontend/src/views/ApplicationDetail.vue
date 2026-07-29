@@ -35,13 +35,21 @@
     </el-descriptions>
   </div>
 
-  <div class="panel">
-    <div class="toolbar">
-      <h3>投递进度</h3>
-      <el-button @click="openProgressDialog">编辑流程</el-button>
+  <div class="panel detail-section">
+    <div class="section-heading section-heading-toggle" @click="toggleSection('progress')">
+      <div>
+        <h3>投递进度</h3>
+        <span>查看当前岗位的流程节点、结果和操作时间。</span>
+      </div>
+      <div class="section-actions" @click.stop>
+        <el-button text type="primary" @click="openProgressDialog">编辑流程</el-button>
+        <el-button text class="collapse-toggle" @click="toggleSection('progress')">
+          {{ sectionOpen.progress ? '收起' : '展开' }}
+        </el-button>
+      </div>
     </div>
 
-    <el-timeline class="status-timeline">
+    <el-timeline v-show="sectionOpen.progress" class="status-timeline compact-timeline">
       <el-timeline-item
         v-for="item in progressItems"
         :key="item.name"
@@ -103,17 +111,66 @@
     </el-timeline>
   </div>
 
-  <div class="panel" v-if="application.jobDescription">
-    <h3>岗位 JD</h3>
-    <div class="jd-content markdown-preview" v-html="jobDescriptionHtml"></div>
+  <div class="panel detail-section" v-if="application.jobDescription">
+    <div class="section-heading section-heading-toggle" @click="toggleSection('jd')">
+      <div>
+        <h3>岗位 JD</h3>
+        <span>岗位职责、任职要求和加分项。</span>
+      </div>
+      <el-button text class="collapse-toggle" @click.stop="toggleSection('jd')">
+        {{ sectionOpen.jd ? '收起' : '展开' }}
+      </el-button>
+    </div>
+    <div v-show="sectionOpen.jd" class="jd-content markdown-preview" v-html="jobDescriptionHtml"></div>
   </div>
 
-  <div class="panel">
-    <div class="toolbar">
-      <h3>面试流程</h3>
-      <el-button @click="openInterview">新增面试记录</el-button>
+  <div class="panel detail-section">
+    <div class="section-heading section-heading-toggle" @click="toggleSection('schedules')">
+      <div>
+        <h3>关联日程</h3>
+        <span>展示和当前投递记录关联的面试、笔试、复盘或截止事项。</span>
+      </div>
+      <div class="section-actions" @click.stop>
+        <el-button text type="primary" @click="goRelatedSchedules">查看日程</el-button>
+        <el-button text class="collapse-toggle" @click="toggleSection('schedules')">
+          {{ sectionOpen.schedules ? '收起' : '展开' }}
+        </el-button>
+      </div>
     </div>
-    <el-timeline>
+    <div v-show="sectionOpen.schedules" v-if="detail.relatedSchedules?.length" class="application-schedule-list">
+      <button
+        v-for="item in detail.relatedSchedules"
+        :key="item.id"
+        class="application-schedule-item"
+        :class="scheduleClass(item)"
+        @click="goRelatedSchedules"
+      >
+        <span>{{ scheduleTimeLabel(item) }}</span>
+        <div>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.scheduleType || '自定义' }} · {{ item.priority || '中' }} · {{ item.importance || '普通' }} · {{ normalizeScheduleStatus(item.status) }}</p>
+        </div>
+      </button>
+    </div>
+    <div v-show="sectionOpen.schedules" v-else class="empty-state application-schedule-empty">
+      暂无关联日程
+    </div>
+  </div>
+
+  <div class="panel detail-section">
+    <div class="section-heading section-heading-toggle" @click="toggleSection('interviews')">
+      <div>
+        <h3>面试流程</h3>
+        <span>记录面试轮次、问题、难度和总结。</span>
+      </div>
+      <div class="section-actions" @click.stop>
+        <el-button text type="primary" @click="openInterview">新增面试记录</el-button>
+        <el-button text class="collapse-toggle" @click="toggleSection('interviews')">
+          {{ sectionOpen.interviews ? '收起' : '展开' }}
+        </el-button>
+      </div>
+    </div>
+    <el-timeline v-show="sectionOpen.interviews">
       <el-timeline-item
         v-for="item in detail.interviewRecords"
         :key="item.id"
@@ -130,12 +187,20 @@
     </el-timeline>
   </div>
 
-  <div class="panel">
-    <div class="toolbar">
-      <h3>Markdown 面试笔记</h3>
-      <el-button @click="openNote">新增笔记</el-button>
+  <div class="panel detail-section">
+    <div class="section-heading section-heading-toggle" @click="toggleSection('notes')">
+      <div>
+        <h3>Markdown 面试笔记</h3>
+        <span>沉淀面试复盘、题目和后续准备。</span>
+      </div>
+      <div class="section-actions" @click.stop>
+        <el-button text type="primary" @click="openNote">新增笔记</el-button>
+        <el-button text class="collapse-toggle" @click="toggleSection('notes')">
+          {{ sectionOpen.notes ? '收起' : '展开' }}
+        </el-button>
+      </div>
     </div>
-    <el-table :data="detail.interviewNotes">
+    <el-table v-show="sectionOpen.notes" :data="detail.interviewNotes">
       <el-table-column prop="title" label="标题" show-overflow-tooltip />
       <el-table-column prop="fileName" label="文件名" show-overflow-tooltip />
       <el-table-column prop="updatedTime" label="更新时间" width="180">
@@ -218,20 +283,28 @@
 <script setup lang="ts">
 import MarkdownIt from 'markdown-it'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ChatDotRound, Collection, EditPen, Files, Medal, Promotion, Star, User, Warning } from '@element-plus/icons-vue'
 import { applicationApi, interviewApi, noteApi, resumeApi } from '../api'
-import type { InterviewNote, InterviewRecord, JobApplication } from '../types'
+import type { InterviewNote, InterviewRecord, JobApplication, Reminder } from '../types'
 import { formatDateTime } from '../utils/time'
 
 type ProgressStep = { name: string; description: string; result?: string; operatedTime?: string }
 
 const route = useRoute()
+const router = useRouter()
 const jobId = Number(route.params.id)
 const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
 const detail = ref<any>({ application: {}, resume: null, interviewRecords: [], interviewNotes: [] })
 const application = computed<JobApplication>(() => detail.value.application || {})
+const sectionOpen = reactive({
+  progress: true,
+  jd: false,
+  schedules: true,
+  interviews: false,
+  notes: false
+})
 const interviewVisible = ref(false)
 const noteVisible = ref(false)
 const notePreviewVisible = ref(false)
@@ -357,6 +430,10 @@ function syncProgressForm(statusName = application.value.currentStatus) {
 
 function statusMeta(status?: string) {
   return statusConfig[status || '待投递'] || { color: '#667085', icon: Files, className: 'status-default' }
+}
+
+function toggleSection(key: keyof typeof sectionOpen) {
+  sectionOpen[key] = !sectionOpen[key]
 }
 
 function resultMeta(result?: string) {
@@ -535,6 +612,40 @@ async function saveCurrentProgress() {
 
 function formatDate(value?: string) {
   return formatDateTime(value)
+}
+
+function formatClock(value?: string) {
+  return value ? value.slice(11, 16) : ''
+}
+
+function scheduleTimeLabel(row: Reminder) {
+  const start = formatDate(row.remindTime)
+  if (!row.endTime) return start
+  if (row.endTime <= row.remindTime) return `${start} - 结束时间异常`
+  return row.endTime.slice(0, 10) === row.remindTime.slice(0, 10)
+    ? `${start} - ${formatClock(row.endTime)}`
+    : `${start} - ${formatDate(row.endTime)}`
+}
+
+function normalizeScheduleStatus(status?: string) {
+  if (status === '已完成' || status === '已取消') return status
+  return '未完成'
+}
+
+function scheduleClass(item: Reminder) {
+  if (normalizeScheduleStatus(item.status) === '已完成') return 'schedule-done'
+  if (normalizeScheduleStatus(item.status) === '已取消') return 'schedule-cancelled'
+  const priorityClass: Record<string, string> = {
+    低: 'schedule-low',
+    中: 'schedule-medium',
+    高: 'schedule-high',
+    紧急: 'schedule-urgent'
+  }
+  return priorityClass[item.priority || '中'] || 'schedule-medium'
+}
+
+function goRelatedSchedules() {
+  router.push(`/reminder?quick=application-${jobId}`)
 }
 
 function nowValue() {

@@ -17,5 +17,10 @@ public class Reminder extends BaseEntity {
     private String title;
     private String content;
     private LocalDateTime remindTime;
+    private LocalDateTime endTime;
+    private String scheduleType;
+    private String priority;
+    private String importance;
+    private Long relatedApplicationId;
     private String status;
 }

@@ -104,6 +104,11 @@ CREATE TABLE IF NOT EXISTS reminder (
   title VARCHAR(160) NOT NULL,
   content VARCHAR(1000),
   remind_time TIMESTAMP NOT NULL,
+  end_time TIMESTAMP,
+  schedule_type VARCHAR(40) DEFAULT '自定义',
+  priority VARCHAR(20) DEFAULT '中',
+  importance VARCHAR(20) DEFAULT '普通',
+  related_application_id BIGINT,
   status VARCHAR(40) NOT NULL DEFAULT '未完成',
   created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -112,4 +117,5 @@ CREATE TABLE IF NOT EXISTS reminder (
 
 CREATE INDEX IF NOT EXISTS idx_reminder_time ON reminder (remind_time);
 CREATE INDEX IF NOT EXISTS idx_reminder_status ON reminder (status);
+CREATE INDEX IF NOT EXISTS idx_reminder_related_application ON reminder (related_application_id);
 CREATE INDEX IF NOT EXISTS idx_reminder_deleted ON reminder (deleted);

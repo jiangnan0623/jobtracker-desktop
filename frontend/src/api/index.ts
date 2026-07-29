@@ -62,6 +62,7 @@ export const noteItemApi = {
 
 export const resumeApi = {
   list: () => http.get('/resumes'),
+  usage: () => http.get('/resumes/usage'),
   upload: (data: FormData) => http.post('/resumes/upload', data),
   update: (id: number, versionName: string, remark?: string) => http.put(`/resumes/${id}`, null, { params: { versionName, remark } }),
   remove: (id: number) => http.delete(`/resumes/${id}`),

@@ -34,9 +34,7 @@ public class ReminderController {
 
     @PostMapping
     public Result<Reminder> create(@RequestBody Reminder reminder) {
-        if (reminder.getStatus() == null || reminder.getStatus().isBlank()) {
-            reminder.setStatus("未完成");
-        }
+        normalize(reminder);
         reminderService.save(reminder);
         return Result.ok(reminder);
     }
@@ -44,6 +42,7 @@ public class ReminderController {
     @PutMapping("/{id}")
     public Result<Reminder> update(@PathVariable Long id, @RequestBody Reminder reminder) {
         reminder.setId(id);
+        normalize(reminder);
         reminderService.updateById(reminder);
         return Result.ok(reminder);
     }
@@ -58,5 +57,20 @@ public class ReminderController {
     public Result<Void> delete(@PathVariable Long id) {
         reminderService.removeById(id);
         return Result.ok();
+    }
+
+    private void normalize(Reminder reminder) {
+        if (reminder.getStatus() == null || reminder.getStatus().isBlank()) {
+            reminder.setStatus("未完成");
+        }
+        if (reminder.getScheduleType() == null || reminder.getScheduleType().isBlank()) {
+            reminder.setScheduleType("自定义");
+        }
+        if (reminder.getPriority() == null || reminder.getPriority().isBlank()) {
+            reminder.setPriority("中");
+        }
+        if (reminder.getImportance() == null || reminder.getImportance().isBlank()) {
+            reminder.setImportance("普通");
+        }
     }
 }

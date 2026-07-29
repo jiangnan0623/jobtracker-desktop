@@ -102,11 +102,17 @@ CREATE TABLE IF NOT EXISTS reminder (
   title VARCHAR(160) NOT NULL,
   content VARCHAR(1000),
   remind_time DATETIME NOT NULL,
+  end_time DATETIME,
+  schedule_type VARCHAR(40) DEFAULT '自定义',
+  priority VARCHAR(20) DEFAULT '中',
+  importance VARCHAR(20) DEFAULT '普通',
+  related_application_id BIGINT,
   status VARCHAR(40) NOT NULL DEFAULT '未完成',
   created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted TINYINT DEFAULT 0,
   INDEX idx_reminder_time (remind_time),
   INDEX idx_reminder_status (status),
+  INDEX idx_reminder_related_application (related_application_id),
   INDEX idx_reminder_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

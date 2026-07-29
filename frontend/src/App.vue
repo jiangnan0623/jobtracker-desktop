@@ -17,7 +17,7 @@
         <el-menu-item index="/applications"><el-icon><FolderOpened /></el-icon><template #title>投递管理</template></el-menu-item>
         <el-menu-item index="/resume"><el-icon><Document /></el-icon><template #title>简历管理</template></el-menu-item>
         <el-menu-item index="/notes"><el-icon><Memo /></el-icon><template #title>笔记管理</template></el-menu-item>
-        <el-menu-item index="/reminder"><el-icon><Bell /></el-icon><template #title>提醒管理</template></el-menu-item>
+        <el-menu-item index="/reminder"><el-icon><Bell /></el-icon><template #title>日程管理</template></el-menu-item>
         <el-menu-item index="/settings"><el-icon><Setting /></el-icon><template #title>系统设置</template></el-menu-item>
       </el-menu>
     </el-aside>
@@ -28,11 +28,11 @@
         </el-button>
         <span>个人求职助手</span>
       </el-header>
-      <div v-if="unfinishedCount > 0" class="global-warning">
+      <button v-if="unfinishedCount > 0" class="global-warning" @click="$router.push('/reminder?quick=pending')">
         <el-icon><Bell /></el-icon>
         <strong>未完成预警</strong>
-        <span>当前还有 {{ unfinishedCount }} 个未完成提醒，请及时处理。</span>
-      </div>
+        <span>当前还有 {{ unfinishedCount }} 个未完成日程，请及时处理。</span>
+      </button>
       <el-main>
         <router-view />
       </el-main>
@@ -52,7 +52,7 @@ const sidebarCollapsed = ref(false)
 const reminders = ref<Reminder[]>([])
 let timer: number | undefined
 
-const unfinishedCount = computed(() => reminders.value.filter((item) => item.status !== '已完成').length)
+const unfinishedCount = computed(() => reminders.value.filter((item) => item.status === '未完成').length)
 
 async function loadReminderWarning() {
   try {

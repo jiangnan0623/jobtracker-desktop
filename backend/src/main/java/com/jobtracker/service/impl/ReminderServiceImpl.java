@@ -14,10 +14,17 @@ import java.util.List;
 @Service
 public class ReminderServiceImpl extends ServiceImpl<ReminderMapper, Reminder> implements ReminderService {
     @Override
+    public List<Reminder> list() {
+        return list(new LambdaQueryWrapper<Reminder>()
+                .orderByAsc(Reminder::getRemindTime)
+                .orderByDesc(Reminder::getUpdatedTime));
+    }
+
+    @Override
     public List<Reminder> today() {
         return list(new LambdaQueryWrapper<Reminder>()
                 .between(Reminder::getRemindTime, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX))
-                .ne(Reminder::getStatus, "已完成")
+                .eq(Reminder::getStatus, "未完成")
                 .orderByAsc(Reminder::getRemindTime));
     }
 

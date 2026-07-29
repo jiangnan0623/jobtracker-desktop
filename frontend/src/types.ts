@@ -52,11 +52,29 @@ export interface Resume {
   remark?: string
 }
 
+export interface ResumeUsage {
+  resumeId: number
+  bindCount: number
+  applications: ResumeUsageApplication[]
+}
+
+export interface ResumeUsageApplication {
+  id: number
+  companyName?: string
+  positionName?: string
+  currentStatus?: string
+}
+
 export interface Reminder {
   id?: number
   title: string
   content?: string
   remindTime: string
+  endTime?: string
+  scheduleType?: string
+  priority?: string
+  importance?: string
+  relatedApplicationId?: number
   status: string
 }
 

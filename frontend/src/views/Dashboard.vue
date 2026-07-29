@@ -4,19 +4,36 @@
     <div class="stat"><span>总投递数量</span><strong>{{ data.totalApplications || 0 }}</strong></div>
     <div class="stat"><span>面试数量</span><strong>{{ data.interviewCount || 0 }}</strong></div>
     <div class="stat"><span>Offer 数量</span><strong>{{ data.offerCount || 0 }}</strong></div>
-    <div class="stat"><span>今日提醒</span><strong>{{ data.todayReminders?.length || 0 }}</strong></div>
+    <div class="stat"><span>今日日程</span><strong>{{ data.todayReminders?.length || 0 }}</strong></div>
   </div>
   <div class="chart-grid">
     <div class="panel"><div ref="pieRef" class="chart"></div></div>
     <div class="panel"><div ref="lineRef" class="chart"></div></div>
     <div class="panel"><div ref="barRef" class="chart"></div></div>
     <div class="panel">
-      <h3>今日提醒</h3>
-      <el-timeline>
-        <el-timeline-item v-for="item in data.todayReminders" :key="item.id" :timestamp="formatClock(item.remindTime)">
-          {{ item.title }}
-        </el-timeline-item>
-      </el-timeline>
+      <div class="section-heading">
+        <div>
+          <h3>今日日程</h3>
+          <span>只展示未完成事项，完成或取消后会从这里移除。</span>
+        </div>
+        <el-button link type="primary" @click="$router.push('/reminder')">查看日程</el-button>
+      </div>
+      <div v-if="data.todayReminders?.length" class="dashboard-schedule-list">
+        <button
+          v-for="item in data.todayReminders"
+          :key="item.id"
+          class="dashboard-schedule-item"
+          :class="scheduleClass(item)"
+          @click="$router.push('/reminder?quick=pending')"
+        >
+          <span>{{ scheduleTimeRange(item) }}</span>
+          <div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.scheduleType || '自定义' }} · {{ item.priority || '中' }} · {{ item.importance || '普通' }}</p>
+          </div>
+        </button>
+      </div>
+      <div v-else class="empty-state dashboard-schedule-empty">今天没有未完成日程</div>
     </div>
   </div>
   <div class="panel">
@@ -115,6 +132,27 @@ function formatDate(value?: string) {
 
 function formatClock(value?: string) {
   return formatTime(value)
+}
+
+function scheduleTimeRange(row: any) {
+  const start = formatClock(row.remindTime)
+  if (!row.endTime) return start
+  if (row.endTime <= row.remindTime) return `${start} - 结束时间异常`
+  return row.endTime.slice(0, 10) === row.remindTime?.slice(0, 10)
+    ? `${start} - ${formatClock(row.endTime)}`
+    : `${start} - ${formatDate(row.endTime)}`
+}
+
+function scheduleClass(item: any) {
+  if (item.status === '已完成') return 'schedule-done'
+  if (item.status === '已取消') return 'schedule-cancelled'
+  const priorityClass: Record<string, string> = {
+    低: 'schedule-low',
+    中: 'schedule-medium',
+    高: 'schedule-high',
+    紧急: 'schedule-urgent'
+  }
+  return priorityClass[item.priority || '中'] || 'schedule-medium'
 }
 
 function splitMultiValue(value?: string) {

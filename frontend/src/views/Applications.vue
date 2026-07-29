@@ -116,9 +116,18 @@
       <el-row :gutter="12">
         <el-col :span="12">
           <el-form-item label="绑定简历">
-            <el-select v-model="form.resumeId" clearable filterable placeholder="选择已上传简历">
-              <el-option v-for="resume in resumes" :key="resume.id" :label="resume.versionName" :value="resume.id" />
-            </el-select>
+            <div class="resume-bind-row">
+              <el-select v-model="form.resumeId" clearable filterable placeholder="选择已上传简历">
+                <el-option v-for="resume in resumes" :key="resume.id" :label="resume.versionName" :value="resume.id" />
+              </el-select>
+              <el-upload
+                :http-request="uploadAndBindResume"
+                :show-file-list="false"
+                accept=".pdf,.doc,.docx"
+              >
+                <el-button :loading="resumeUploading">上传新简历</el-button>
+              </el-upload>
+            </div>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -158,7 +167,7 @@
 <script setup lang="ts">
 import { ChatDotRound, CircleCheck, Collection, EditPen, Medal, Promotion, Star, User, Warning } from '@element-plus/icons-vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { applicationApi, recruitmentTypeOptions, resumeApi, resumeCategoryOptions, statusOptions, typeOptions } from '../api'
 import type { JobApplication, Resume } from '../types'
 import { formatDateTime } from '../utils/time'
@@ -172,6 +181,7 @@ const dynamicTypeOptions = ref<string[]>([...typeOptions])
 const dynamicResumeCategoryOptions = ref<string[]>([...resumeCategoryOptions])
 const total = ref(0)
 const dialogVisible = ref(false)
+const resumeUploading = ref(false)
 const groupByCompany = ref(false)
 const dateRange = ref<string[]>([])
 const sortMode = ref('appliedTime-desc')
@@ -283,6 +293,33 @@ async function load() {
 
 async function loadResumes() {
   resumes.value = await resumeApi.list() as unknown as Resume[]
+}
+
+function buildApplicationResumeName(fileName: string) {
+  const date = new Date()
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const baseName = fileName.replace(/\.[^.]+$/, '')
+  const parts = [form.companyName, form.positionName, baseName, `${yyyy}${mm}${dd}`]
+    .map(item => item?.trim())
+    .filter(Boolean)
+  return parts.join('-') || fileName
+}
+
+async function uploadAndBindResume(option: any) {
+  resumeUploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', option.file)
+    fd.append('versionName', buildApplicationResumeName(option.file.name))
+    const resume = await resumeApi.upload(fd) as unknown as Resume
+    await loadResumes()
+    form.resumeId = resume.id
+    ElMessage.success('简历已上传并自动绑定')
+  } finally {
+    resumeUploading.value = false
+  }
 }
 
 async function loadStatusOptions() {
