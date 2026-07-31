@@ -36,12 +36,12 @@
         <span>今日</span>
         <strong>{{ todayItems.length }}</strong>
       </button>
-      <button class="schedule-stat-card" @click="openQuickList('本周', weekItems)">
-        <span>本周</span>
+      <button class="schedule-stat-card" @click="openQuickList(weekSummaryLabel, weekItems)">
+        <span>{{ weekSummaryLabel }}</span>
         <strong>{{ weekTotal }}</strong>
       </button>
-      <button class="schedule-stat-card" @click="openQuickList('本月', monthItems)">
-        <span>本月</span>
+      <button class="schedule-stat-card" @click="openQuickList(monthSummaryLabel, monthItems)">
+        <span>{{ monthSummaryLabel }}</span>
         <strong>{{ monthTotal }}</strong>
       </button>
       <button class="schedule-stat-card warning" @click="openQuickList('未完成', pendingItems)">
@@ -53,10 +53,19 @@
         <strong>{{ urgentTotal }}</strong>
       </button>
       <div class="schedule-legend">
-        <span class="legend-item"><i class="schedule-medium"></i>中</span>
-        <span class="legend-item"><i class="schedule-high"></i>高</span>
-        <span class="legend-item"><i class="schedule-urgent"></i>紧急</span>
-        <span class="legend-item"><i class="schedule-done"></i>完成</span>
+        <div class="legend-group">
+          <span class="legend-title">优先级</span>
+          <span class="legend-item"><i class="schedule-low"></i>低</span>
+          <span class="legend-item"><i class="schedule-medium"></i>中</span>
+          <span class="legend-item"><i class="schedule-high"></i>高</span>
+          <span class="legend-item"><i class="schedule-urgent"></i>紧急</span>
+        </div>
+        <div class="legend-group">
+          <span class="legend-title">状态</span>
+          <span class="legend-item"><i class="schedule-pending"></i>未完成</span>
+          <span class="legend-item"><i class="schedule-done"></i>完成</span>
+          <span class="legend-item"><i class="schedule-cancelled"></i>取消</span>
+        </div>
       </div>
     </div>
 
@@ -66,8 +75,8 @@
         v-for="day in calendarDays"
         :key="day.key"
         class="calendar-day"
-        :class="{ muted: !day.inCurrentMonth, today: day.isToday }"
-        @click="openCreate(day.dateText)"
+        :class="{ muted: !day.inCurrentMonth, today: day.isToday, focused: day.isFocused }"
+        @click="selectDateAndCreate(day.dateText)"
       >
         <div class="calendar-day-head">
           <span>{{ day.day }}</span>
@@ -78,7 +87,7 @@
             v-for="item in day.items.slice(0, 4)"
             :key="item.id"
             class="calendar-event"
-            :class="scheduleClass(item)"
+            :class="[priorityClass(item), statusClass(item)]"
             @click.stop="openEdit(item)"
           >
             <span>{{ formatClock(item.remindTime) }}</span>
@@ -95,8 +104,8 @@
         v-for="day in weekViewDays"
         :key="day.key"
         class="week-day"
-        :class="{ today: day.isToday }"
-        @click="openCreate(day.dateText)"
+        :class="{ today: day.isToday, focused: day.isFocused }"
+        @click="selectDateAndCreate(day.dateText)"
       >
         <div class="week-day-head">
           <div>
@@ -110,7 +119,7 @@
             v-for="item in day.items"
             :key="item.id"
             class="week-event"
-            :class="scheduleClass(item)"
+            :class="[priorityClass(item), statusClass(item)]"
             @click.stop="openEdit(item)"
           >
             <div class="week-event-time">{{ scheduleTimeRange(item) }}</div>
@@ -131,7 +140,7 @@
           v-for="item in dayItems"
           :key="item.id"
           class="day-agenda-item"
-          :class="scheduleClass(item)"
+          :class="[priorityClass(item), statusClass(item)]"
           @click="openEdit(item)"
         >
           <span class="day-agenda-time">{{ scheduleTimeRange(item) }}</span>
@@ -154,14 +163,14 @@
         <template #default="{ row }">{{ scheduleTimeLabel(row) }}</template>
       </el-table-column>
       <el-table-column label="优先级" width="100">
-        <template #default="{ row }"><el-tag :class="scheduleClass(row)" effect="light">{{ row.priority || '中' }}</el-tag></template>
+        <template #default="{ row }"><el-tag :class="priorityClass(row)" effect="light">{{ row.priority || '中' }}</el-tag></template>
       </el-table-column>
       <el-table-column label="重要程度" width="110">
         <template #default="{ row }">{{ row.importance || '普通' }}</template>
       </el-table-column>
       <el-table-column label="状态" width="110">
         <template #default="{ row }">
-          <el-tag :type="statusType(row.status)" effect="light" round>{{ normalizeStatus(row.status) }}</el-tag>
+          <el-tag class="schedule-status-tag" :class="statusClass(row)" effect="light" round>{{ normalizeStatus(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="content" label="备注" show-overflow-tooltip />
@@ -241,7 +250,7 @@
         v-for="item in quickListRows"
         :key="item.id"
         class="quick-schedule-item"
-        :class="scheduleClass(item)"
+        :class="[priorityClass(item), statusClass(item)]"
         @click="openEditFromQuickList(item)"
       >
         <span>{{ scheduleTimeLabel(item) }}</span>
@@ -270,6 +279,7 @@ type CalendarDay = {
   day: number
   inCurrentMonth: boolean
   isToday: boolean
+  isFocused: boolean
   weekday?: string
   label?: string
   items: Reminder[]
@@ -308,6 +318,8 @@ const monthItems = computed(() => {
   const month = formatMonth(currentMonth.value)
   return sortedRows.value.filter((item) => (item.remindTime || '').slice(0, 7) === month)
 })
+const weekSummaryLabel = computed(() => isSameWeek(currentDate.value, new Date()) ? '本周' : '所选周')
+const monthSummaryLabel = computed(() => isSameMonth(currentDate.value, new Date()) ? '本月' : '所选月')
 const pendingItems = computed(() => sortedRows.value.filter((item) => normalizeStatus(item.status) === '未完成'))
 const urgentItems = computed(() => sortedRows.value.filter((item) => normalizeStatus(item.status) === '未完成' && item.priority === '紧急'))
 const weekTotal = computed(() => weekItems.value.length)
@@ -342,6 +354,7 @@ const calendarDays = computed<CalendarDay[]>(() => {
       day: date.getDate(),
       inCurrentMonth: date.getMonth() === currentMonth.value.getMonth(),
       isToday: dateText === formatDate(new Date()),
+      isFocused: dateText === formatDate(currentDate.value),
       items: sortedRows.value.filter((item) => (item.remindTime || '').slice(0, 10) === dateText)
     }
   })
@@ -359,6 +372,7 @@ const weekViewDays = computed<CalendarDay[]>(() => {
       day: date.getDate(),
       inCurrentMonth: true,
       isToday: dateText === formatDate(new Date()),
+      isFocused: dateText === formatDate(currentDate.value),
       weekday: weekDays[index],
       label: `${date.getMonth() + 1}/${date.getDate()}`,
       items: sortedRows.value.filter((item) => (item.remindTime || '').slice(0, 10) === dateText)
@@ -378,9 +392,7 @@ watch(currentMonth, (value) => {
 
 watch(currentDate, (value) => {
   selectedDate.value = formatDate(value)
-  if (viewMode.value !== 'month') {
-    currentMonth.value = startOfMonth(value)
-  }
+  currentMonth.value = startOfMonth(value)
 })
 
 watch(() => route.query.quick, () => {
@@ -417,23 +429,26 @@ function normalizeStatus(status?: string) {
   return '未完成'
 }
 
-function statusType(status?: string) {
-  const normalized = normalizeStatus(status)
-  if (normalized === '已完成') return 'success'
-  if (normalized === '已取消') return 'info'
-  return 'warning'
-}
-
-function scheduleClass(item: Reminder) {
+function priorityClass(item: Reminder) {
   const priority = item.priority || '中'
-  if (normalizeStatus(item.status) === '已完成') return 'schedule-done'
-  if (normalizeStatus(item.status) === '已取消') return 'schedule-cancelled'
   return {
     低: 'schedule-low',
     中: 'schedule-medium',
     高: 'schedule-high',
     紧急: 'schedule-urgent'
   }[priority] || 'schedule-medium'
+}
+
+function statusClass(item: Reminder) {
+  const status = normalizeStatus(item.status)
+  if (status === '已完成') return 'schedule-done'
+  if (status === '已取消') return 'schedule-cancelled'
+  return 'schedule-pending'
+}
+
+function selectDateAndCreate(dateText: string) {
+  handleDatePick(dateText)
+  openCreate(dateText)
 }
 
 function openCreate(dateText?: string) {
@@ -517,38 +532,31 @@ async function removeFromDialog() {
 
 function shiftPeriod(offset: number) {
   if (viewMode.value === 'month') {
-    const next = new Date(currentMonth.value)
-    next.setMonth(next.getMonth() + offset)
-    currentMonth.value = startOfMonth(next)
-    currentDate.value = new Date(next)
+    const focus = currentDate.value
+    const targetMonth = new Date(focus.getFullYear(), focus.getMonth() + offset, 1)
+    currentDate.value = dateInMonth(targetMonth.getFullYear(), targetMonth.getMonth(), focus.getDate())
     return
   }
   const next = new Date(currentDate.value)
   next.setDate(next.getDate() + (viewMode.value === 'week' ? offset * 7 : offset))
   currentDate.value = next
-  currentMonth.value = startOfMonth(next)
 }
 
 function goToday() {
   const today = new Date()
   currentDate.value = today
-  currentMonth.value = startOfMonth(today)
 }
 
 function handleMonthPick(value?: string) {
   if (!value) return
   const [year, month] = value.split('-').map(Number)
-  const next = new Date(year, month - 1, 1)
-  currentMonth.value = startOfMonth(next)
-  currentDate.value = next
+  currentDate.value = dateInMonth(year, month - 1, currentDate.value.getDate())
 }
 
 function handleDatePick(value?: string) {
   if (!value) return
   const [year, month, day] = value.split('-').map(Number)
-  const next = new Date(year, month - 1, day)
-  currentDate.value = next
-  currentMonth.value = startOfMonth(next)
+  currentDate.value = new Date(year, month - 1, day)
 }
 
 function startOfMonth(date: Date) {
@@ -560,6 +568,19 @@ function startOfWeek(date: Date) {
   const weekday = (date.getDay() + 6) % 7
   result.setDate(date.getDate() - weekday)
   return result
+}
+
+function dateInMonth(year: number, month: number, preferredDay: number) {
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  return new Date(year, month, Math.min(preferredDay, lastDay))
+}
+
+function isSameMonth(left: Date, right: Date) {
+  return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth()
+}
+
+function isSameWeek(left: Date, right: Date) {
+  return formatDate(startOfWeek(left)) === formatDate(startOfWeek(right))
 }
 
 function formatDate(date: Date) {
