@@ -20,8 +20,21 @@
       <el-descriptions-item label="投递批次">{{ application.recruitmentType || '-' }}</el-descriptions-item>
       <el-descriptions-item label="简历类别">{{ application.resumeCategory || '-' }}</el-descriptions-item>
       <el-descriptions-item label="绑定简历">
-        <span>{{ detail.resume?.versionName || '未绑定' }}</span>
-        <el-button v-if="detail.resume?.fileType === 'pdf'" size="small" link type="primary" @click="previewResume">预览</el-button>
+        <div class="bound-resume-info">
+          <span class="bound-resume-name" :title="detail.resume?.versionName || '未绑定'">
+            {{ detail.resume?.versionName || '未绑定' }}
+          </span>
+          <el-button
+            v-if="detail.resume?.fileType === 'pdf'"
+            class="bound-resume-preview"
+            size="small"
+            link
+            type="primary"
+            @click="previewResume"
+          >
+            预览
+          </el-button>
+        </div>
       </el-descriptions-item>
       <el-descriptions-item label="地点">{{ application.workLocation || '-' }}</el-descriptions-item>
       <el-descriptions-item label="来源">{{ application.source || '-' }}</el-descriptions-item>
