@@ -103,26 +103,51 @@ onMounted(async () => {
 
 function renderCharts() {
   const status = data.value.statusCount || {}
+  const chartText = '#3f3d39'
+  const chartMuted = '#8b867f'
+  const chartGrid = '#e7e2d9'
+  const chartPalette = ['#c15f3c', '#7f8f73', '#d2a24c', '#7b829b', '#a66e64', '#5f837d', '#b28a6a']
   echarts.init(pieRef.value!).setOption({
-    title: { text: '投递状态分布' },
+    color: chartPalette,
+    title: { text: '投递状态分布', textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
     tooltip: { trigger: 'item' },
-    series: [{ type: 'pie', radius: '62%', data: Object.entries(status).map(([name, value]) => ({ name, value })) }]
+    legend: { textStyle: { color: chartMuted } },
+    series: [{
+      type: 'pie',
+      radius: ['42%', '66%'],
+      padAngle: 2,
+      itemStyle: { borderColor: '#fffdf9', borderWidth: 2, borderRadius: 5 },
+      label: { color: chartMuted },
+      data: Object.entries(status).map(([name, value]) => ({ name, value }))
+    }]
   })
   const trend = data.value.weeklyTrend || {}
   echarts.init(lineRef.value!).setOption({
-    title: { text: '每周投递趋势' },
+    color: [chartPalette[0]],
+    title: { text: '每周投递趋势', textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: Object.keys(trend) },
-    yAxis: { type: 'value', minInterval: 1 },
-    series: [{ type: 'line', smooth: true, data: Object.values(trend) }]
+    grid: { left: 42, right: 20, top: 58, bottom: 34 },
+    xAxis: { type: 'category', data: Object.keys(trend), axisLine: { lineStyle: { color: chartGrid } }, axisLabel: { color: chartMuted } },
+    yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { color: chartGrid, type: 'dashed' } }, axisLabel: { color: chartMuted } },
+    series: [{
+      type: 'line',
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 7,
+      lineStyle: { width: 3 },
+      areaStyle: { color: 'rgba(193, 95, 60, .10)' },
+      data: Object.values(trend)
+    }]
   })
   const company = data.value.companyCount || {}
   echarts.init(barRef.value!).setOption({
-    title: { text: '公司投递数量' },
+    color: [chartPalette[1]],
+    title: { text: '公司投递数量', textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: Object.keys(company) },
-    yAxis: { type: 'value', minInterval: 1 },
-    series: [{ type: 'bar', data: Object.values(company) }]
+    grid: { left: 42, right: 20, top: 58, bottom: 34 },
+    xAxis: { type: 'category', data: Object.keys(company), axisLine: { lineStyle: { color: chartGrid } }, axisLabel: { color: chartMuted } },
+    yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { color: chartGrid, type: 'dashed' } }, axisLabel: { color: chartMuted } },
+    series: [{ type: 'bar', barMaxWidth: 32, itemStyle: { borderRadius: [6, 6, 0, 0] }, data: Object.values(company) }]
   })
 }
 

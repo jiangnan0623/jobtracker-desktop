@@ -1,17 +1,17 @@
 <template>
   <el-container class="layout" :class="{ collapsed: sidebarCollapsed, 'has-warning': unfinishedCount > 0 }">
-    <el-aside :width="sidebarCollapsed ? '72px' : '232px'" class="sidebar">
+    <el-aside :width="sidebarCollapsed ? '76px' : '248px'" class="sidebar">
       <div class="brand">
-        <span class="brand-mark">JT</span>
-        <span v-if="!sidebarCollapsed" class="brand-text">求职进度管理</span>
+        <span class="brand-mark" aria-hidden="true">J</span>
+        <span v-if="!sidebarCollapsed" class="brand-copy">
+          <strong class="brand-text">JobTracker</strong>
+          <small>求职进度管理</small>
+        </span>
       </div>
       <el-menu
         router
         :collapse="sidebarCollapsed"
         :default-active="$route.path"
-        background-color="#18212f"
-        text-color="#d7dde8"
-        active-text-color="#ffffff"
       >
         <el-menu-item index="/dashboard"><el-icon><DataBoard /></el-icon><template #title>Dashboard</template></el-menu-item>
         <el-menu-item index="/applications"><el-icon><FolderOpened /></el-icon><template #title>投递管理</template></el-menu-item>
@@ -23,10 +23,19 @@
     </el-aside>
     <el-container>
       <el-header class="topbar">
-        <el-button class="collapse-btn" text @click="sidebarCollapsed = !sidebarCollapsed">
+        <el-button
+          class="collapse-btn"
+          text
+          :aria-label="sidebarCollapsed ? '展开侧栏' : '收起侧栏'"
+          @click="sidebarCollapsed = !sidebarCollapsed"
+        >
           <el-icon><component :is="sidebarCollapsed ? Expand : Fold" /></el-icon>
         </el-button>
-        <span>个人求职助手</span>
+        <span class="topbar-divider"></span>
+        <div class="topbar-context">
+          <small>Workspace</small>
+          <strong>个人求职助手</strong>
+        </div>
       </el-header>
       <button v-if="unfinishedCount > 0" class="global-warning" @click="$router.push('/reminder?quick=pending')">
         <el-icon><Bell /></el-icon>
