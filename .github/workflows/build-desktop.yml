@@ -1,4 +1,4 @@
-name: Build desktop installers
+name: Build Windows desktop installers
 
 on:
   workflow_dispatch:
@@ -45,35 +45,3 @@ jobs:
           path: |
             desktop/release/*.exe
             desktop/release/*.blockmap
-
-  macos:
-    name: macOS packages
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Build lite package
-        run: bash desktop/build-desktop-mac.sh lite
-
-      - name: Build full package
-        run: bash desktop/build-desktop-mac.sh full
-
-      - name: Upload macOS packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: jobtracker-macos-packages
-          path: |
-            desktop/release/*.dmg
-            desktop/release/*.zip
