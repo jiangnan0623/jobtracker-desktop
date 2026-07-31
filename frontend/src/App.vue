@@ -3,22 +3,21 @@
     <el-aside :width="sidebarCollapsed ? '76px' : '248px'" class="sidebar">
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">J</span>
-        <span v-if="!sidebarCollapsed" class="brand-copy">
+        <span class="brand-copy" :aria-hidden="sidebarCollapsed">
           <strong class="brand-text">JobTracker</strong>
           <small>求职进度管理</small>
         </span>
       </div>
       <el-menu
         router
-        :collapse="sidebarCollapsed"
         :default-active="$route.path"
       >
-        <el-menu-item index="/dashboard"><el-icon><DataBoard /></el-icon><template #title>Dashboard</template></el-menu-item>
-        <el-menu-item index="/applications"><el-icon><FolderOpened /></el-icon><template #title>投递管理</template></el-menu-item>
-        <el-menu-item index="/resume"><el-icon><Document /></el-icon><template #title>简历管理</template></el-menu-item>
-        <el-menu-item index="/notes"><el-icon><Memo /></el-icon><template #title>笔记管理</template></el-menu-item>
-        <el-menu-item index="/reminder"><el-icon><Bell /></el-icon><template #title>日程管理</template></el-menu-item>
-        <el-menu-item index="/settings"><el-icon><Setting /></el-icon><template #title>系统设置</template></el-menu-item>
+        <el-menu-item index="/dashboard" :title="sidebarCollapsed ? 'Dashboard' : ''"><el-icon><DataBoard /></el-icon><template #title><span class="menu-label">Dashboard</span></template></el-menu-item>
+        <el-menu-item index="/applications" :title="sidebarCollapsed ? '投递管理' : ''"><el-icon><FolderOpened /></el-icon><template #title><span class="menu-label">投递管理</span></template></el-menu-item>
+        <el-menu-item index="/resume" :title="sidebarCollapsed ? '简历管理' : ''"><el-icon><Document /></el-icon><template #title><span class="menu-label">简历管理</span></template></el-menu-item>
+        <el-menu-item index="/notes" :title="sidebarCollapsed ? '笔记管理' : ''"><el-icon><Memo /></el-icon><template #title><span class="menu-label">笔记管理</span></template></el-menu-item>
+        <el-menu-item index="/reminder" :title="sidebarCollapsed ? '日程管理' : ''"><el-icon><Bell /></el-icon><template #title><span class="menu-label">日程管理</span></template></el-menu-item>
+        <el-menu-item index="/settings" :title="sidebarCollapsed ? '系统设置' : ''"><el-icon><Setting /></el-icon><template #title><span class="menu-label">系统设置</span></template></el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

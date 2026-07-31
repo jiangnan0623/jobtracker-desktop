@@ -2,14 +2,7 @@
 html, body, #app { height: 100%; overflow: hidden; }
 body { margin: 0; color: #172033; background: #f5f7fb; font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; }
 .layout { height: 100vh; overflow: hidden; }
-.layout.collapsed .brand { justify-content: center; padding: 0; }
-.layout.collapsed .sidebar .el-menu { width: 72px; display: flex; flex-direction: column; align-items: center; }
-.layout.collapsed .sidebar .el-menu-item { position: relative; width: 44px !important; min-width: 44px; max-width: 44px; height: 44px; justify-content: center; margin: 8px 0 !important; padding: 0 !important; border-radius: 10px; background: transparent !important; }
-.layout.collapsed .sidebar .el-menu-item .el-icon { width: 22px; margin: 0 !important; font-size: 22px; }
-.layout.collapsed .sidebar .el-menu--collapse > .el-menu-item [class^="el-tooltip"] { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0 !important; }
-.layout.collapsed .sidebar .el-menu-item.is-active { color: #60a5fa !important; background: transparent !important; }
-.layout.collapsed .sidebar .el-menu-item.is-active::after { content: ""; position: absolute; right: -14px; top: 12px; width: 3px; height: 20px; border-radius: 999px; background: #60a5fa; }
-.sidebar { height: 100vh; background: #18212f; transition: width .2s ease; overflow: hidden; }
+.sidebar { height: 100vh; flex: 0 0 auto; overflow: hidden; background: #18212f; transition: width .24s cubic-bezier(.4, 0, .2, 1); will-change: width; }
 .brand { height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 18px; color: #fff; font-size: 18px; font-weight: 700; white-space: nowrap; }
 .brand-mark { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; background: #2f80ed; font-size: 14px; letter-spacing: .5px; flex: 0 0 auto; }
 .brand-text { overflow: hidden; text-overflow: ellipsis; }
@@ -40,6 +33,20 @@ body { margin: 0; color: #172033; background: #f5f7fb; font-family: Inter, "Ping
 .resume-bind-row .el-select { flex: 1 1 auto; min-width: 0; }
 .resume-bind-row .el-upload { flex: 0 0 auto; }
 .resume-usage-action { display: flex; align-items: center; justify-content: center; }
+.resume-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  white-space: nowrap;
+}
+.resume-row-actions .el-button {
+  flex: 0 0 auto;
+  min-width: 50px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+.resume-row-actions .el-button + .el-button { margin-left: 0; }
 .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(140px, 1fr)); gap: 14px; margin-bottom: 16px; }
 .stat { background: #fff; border: 1px solid #e7eaf0; border-radius: 8px; padding: 16px; }
 .stat span { color: #667085; font-size: 13px; }
@@ -341,6 +348,7 @@ select {
   height: 72px;
   gap: 12px;
   padding: 0 18px;
+  overflow: hidden;
   color: var(--jt-text);
   border-bottom: 1px solid rgba(208, 202, 191, .72);
 }
@@ -361,10 +369,17 @@ select {
 
 .brand-copy {
   display: flex;
+  width: 160px;
+  max-width: 160px;
   min-width: 0;
+  flex: 0 1 160px;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
   line-height: 1.15;
+  opacity: 1;
+  transform: translateX(0);
+  transition: max-width .2s ease, opacity .12s ease .06s, transform .2s ease;
 }
 
 .brand-text {
@@ -386,24 +401,31 @@ select {
 .sidebar .el-menu {
   width: 100%;
   padding: 14px 10px;
+  overflow: hidden;
   border-right: 0;
   background: transparent;
   --el-menu-bg-color: transparent;
   --el-menu-hover-bg-color: #e9e5dc;
   --el-menu-text-color: #65615b;
   --el-menu-active-color: var(--jt-text);
+  transition: padding .24s cubic-bezier(.4, 0, .2, 1);
 }
 
 .sidebar .el-menu-item {
   position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 8px;
+  width: 100%;
   height: 44px;
   margin: 3px 0;
   padding: 0 13px !important;
+  overflow: hidden;
   color: #65615b;
   border-radius: 9px;
   font-size: 14px;
   font-weight: 520;
-  transition: color .16s ease, background .16s ease, transform .16s ease;
+  transition: width .24s cubic-bezier(.4, 0, .2, 1), margin .24s cubic-bezier(.4, 0, .2, 1), padding .24s cubic-bezier(.4, 0, .2, 1), column-gap .18s ease, color .16s ease, background .16s ease, transform .16s ease;
 }
 
 .sidebar .el-menu-item:hover {
@@ -429,8 +451,25 @@ select {
 }
 
 .sidebar .el-menu-item .el-icon {
+  width: 22px;
+  margin: 0;
   color: #817c74;
   font-size: 18px;
+  justify-self: center;
+}
+
+.sidebar .el-menu-item > span {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.menu-label {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity .1s ease .06s, transform .18s ease;
 }
 
 .sidebar .el-menu-item.is-active .el-icon {
@@ -438,23 +477,32 @@ select {
 }
 
 .layout.collapsed .brand {
+  gap: 0;
+  justify-content: center;
   padding: 0;
 }
 
+.layout.collapsed .brand-copy {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition-delay: 0s;
+}
+
 .layout.collapsed .sidebar .el-menu {
-  width: 76px;
+  width: 100%;
   padding: 14px 0;
 }
 
 .layout.collapsed .sidebar .el-menu-item {
-  display: grid;
+  grid-template-columns: 22px 0fr;
+  column-gap: 0;
   width: 44px !important;
   min-width: 44px;
   max-width: 44px;
   height: 44px;
-  place-items: center;
-  margin: 5px auto !important;
-  padding: 0 !important;
+  margin: 5px 16px !important;
+  padding: 0 11px !important;
   background: transparent !important;
 }
 
@@ -477,23 +525,15 @@ select {
   display: none;
 }
 
-.layout.collapsed .sidebar .el-menu--collapse > .el-menu-item [class^="el-tooltip"] {
-  position: absolute !important;
-  inset: 0 !important;
-  display: grid !important;
-  width: 100% !important;
-  height: 100% !important;
-  place-items: center !important;
-  padding: 0 !important;
-}
-
 .layout.collapsed .sidebar .el-menu-item .el-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   width: 22px;
   margin: 0 !important;
-  transform: translate(-50%, -50%);
+}
+
+.layout.collapsed .menu-label {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition-delay: 0s;
 }
 
 .topbar {

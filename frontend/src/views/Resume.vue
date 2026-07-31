@@ -34,10 +34,12 @@
       <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
       <el-table-column label="操作" width="280">
         <template #default="{ row }">
-          <el-button size="small" :disabled="row.fileType !== 'pdf'" @click="preview(row)">预览</el-button>
-          <el-button size="small" @click="download(row.id)">下载</el-button>
-          <el-button size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="remove(row.id)">删除</el-button>
+          <div class="resume-row-actions">
+            <el-button size="small" :disabled="row.fileType !== 'pdf'" @click="preview(row)">预览</el-button>
+            <el-button size="small" @click="download(row.id)">下载</el-button>
+            <el-button size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button size="small" type="danger" @click="remove(row.id)">删除</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
