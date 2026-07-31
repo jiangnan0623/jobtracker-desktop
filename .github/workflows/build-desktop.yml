@@ -1,0 +1,79 @@
+name: Build desktop installers
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "desktop/**"
+      - ".github/workflows/build-desktop.yml"
+
+jobs:
+  windows:
+    name: Windows installers
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build lite installer
+        shell: pwsh
+        run: desktop/build-desktop-lite.ps1 -Maven mvn.cmd -Jlink jlink.exe
+
+      - name: Build full installer
+        shell: pwsh
+        run: desktop/build-desktop-full.ps1 -Maven mvn.cmd -Jlink jlink.exe
+
+      - name: Upload Windows installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobtracker-windows-installers
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.blockmap
+
+  macos:
+    name: macOS packages
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build lite package
+        run: bash desktop/build-desktop-mac.sh lite
+
+      - name: Build full package
+        run: bash desktop/build-desktop-mac.sh full
+
+      - name: Upload macOS packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobtracker-macos-packages
+          path: |
+            desktop/release/*.dmg
+            desktop/release/*.zip

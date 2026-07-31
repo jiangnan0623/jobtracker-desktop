@@ -1,0 +1,18 @@
+{
+  "name": "job-tracker-desktop",
+  "version": "0.1.1",
+  "description": "JobTracker desktop client",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:lite": "electron-builder --win nsis --config electron-builder.lite.yml",
+    "dist:full": "electron-builder --win nsis --config electron-builder.full.yml",
+    "dist:mac:lite": "electron-builder --mac dmg zip --config electron-builder.mac.lite.yml",
+    "dist:mac:full": "electron-builder --mac dmg zip --config electron-builder.mac.full.yml"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  }
+}
