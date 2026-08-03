@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title desc">
+  <title id="title">JobTracker Desktop</title>
+  <desc id="desc">Windows 本地优先的个人求职工作台，统一管理投递、流程、简历、笔记和日程。</desc>
+
+  <rect width="1200" height="440" rx="28" fill="#f7f5f1"/>
+  <path d="M0 356C194 309 316 405 511 371c217-38 339-156 689-92v161H0Z" fill="#f0eee8"/>
+  <circle cx="1097" cy="73" r="93" fill="#f4e4dc"/>
+  <circle cx="1047" cy="59" r="9" fill="#c15f3c" opacity=".42"/>
+  <circle cx="1124" cy="119" r="6" fill="#bd8a31" opacity=".55"/>
+
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">
+    <g transform="translate(58 49)">
+      <rect width="53" height="53" rx="16" fill="#c15f3c"/>
+      <text x="26.5" y="37" text-anchor="middle" fill="#fffdf9" font-family="Georgia,serif" font-size="30" font-weight="700">J</text>
+      <text x="72" y="14" dominant-baseline="hanging" fill="#6f6b64" font-size="15" font-weight="700" letter-spacing="2">WINDOWS DESKTOP · LOCAL-FIRST · v1.2.0</text>
+    </g>
+
+    <text x="58" y="137" dominant-baseline="hanging" fill="#2f2d29" font-family="Georgia,'Noto Serif SC','Songti SC',serif" font-size="66" font-weight="700">JobTracker</text>
+    <text x="58" y="220" dominant-baseline="hanging" fill="#2f2d29" font-size="31" font-weight="700">把每一次投递，变成可追踪的求职上下文</text>
+    <text x="58" y="274" dominant-baseline="hanging" fill="#6f6b64" font-size="20">投递 · 招聘流程 · 简历版本 · 面试复盘 · 日程提醒</text>
+
+    <g transform="translate(58 330)">
+      <rect width="166" height="48" rx="24" fill="#c15f3c"/>
+      <text x="83" y="31" text-anchor="middle" fill="#fffdf9" font-size="18" font-weight="700">数据留在本机</text>
+      <rect x="178" width="202" height="48" rx="24" fill="#fffdf9" stroke="#ded9cf"/>
+      <text x="279" y="31" text-anchor="middle" fill="#2f2d29" font-size="18" font-weight="700">为长期求职跟进而生</text>
+    </g>
+
+    <g transform="translate(686 64)">
+      <rect width="456" height="328" rx="22" fill="#fffdf9" stroke="#ded9cf" stroke-width="2"/>
+      <rect width="456" height="58" rx="22" fill="#f0eee8"/>
+      <path d="M0 36h456v22H0Z" fill="#f0eee8"/>
+      <circle cx="29" cy="29" r="6" fill="#c15f3c"/>
+      <circle cx="50" cy="29" r="6" fill="#bd8a31"/>
+      <circle cx="71" cy="29" r="6" fill="#71816a"/>
+      <text x="102" y="36" fill="#6f6b64" font-size="15" font-weight="700" letter-spacing="1.6">APPLICATION WORKSPACE</text>
+
+      <text x="28" y="94" fill="#2f2d29" font-size="23" font-weight="700">今日跟进</text>
+      <rect x="324" y="73" width="104" height="34" rx="17" fill="#f4e4dc"/>
+      <text x="376" y="95" text-anchor="middle" fill="#a94d2f" font-size="15" font-weight="700">3 项待处理</text>
+
+      <g transform="translate(28 124)">
+        <rect width="400" height="62" rx="14" fill="#f8f5ef"/>
+        <rect width="5" height="62" rx="2.5" fill="#c15f3c"/>
+        <text x="24" y="26" fill="#2f2d29" font-size="17" font-weight="700">星河智能 · 后端开发</text>
+        <text x="24" y="48" fill="#6f6b64" font-size="14">明天 14:00 · 技术二面</text>
+        <rect x="322" y="17" width="60" height="28" rx="14" fill="#e7eee4"/>
+        <text x="352" y="36" text-anchor="middle" fill="#596653" font-size="14" font-weight="700">面试</text>
+      </g>
+      <g transform="translate(28 197)">
+        <rect width="400" height="62" rx="14" fill="#f8f5ef"/>
+        <rect width="5" height="62" rx="2.5" fill="#bd8a31"/>
+        <text x="24" y="26" fill="#2f2d29" font-size="17" font-weight="700">澄明数据 · Java 工程师</text>
+        <text x="24" y="48" fill="#6f6b64" font-size="14">周五前 · 完成在线笔试</text>
+        <rect x="322" y="17" width="60" height="28" rx="14" fill="#f7edd7"/>
+        <text x="352" y="36" text-anchor="middle" fill="#8f6721" font-size="14" font-weight="700">笔试</text>
+      </g>
+      <g transform="translate(28 280)">
+        <path d="M8 8h352" stroke="#ded9cf" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="8" cy="8" r="8" fill="#c15f3c"/>
+        <circle cx="96" cy="8" r="8" fill="#c15f3c"/>
+        <circle cx="184" cy="8" r="8" fill="#c15f3c"/>
+        <circle cx="272" cy="8" r="8" fill="#fffdf9" stroke="#c15f3c" stroke-width="3"/>
+        <circle cx="360" cy="8" r="8" fill="#fffdf9" stroke="#ded9cf" stroke-width="3"/>
+        <text x="8" y="36" text-anchor="middle" fill="#6f6b64" font-size="12">收藏</text>
+        <text x="96" y="36" text-anchor="middle" fill="#6f6b64" font-size="12">投递</text>
+        <text x="184" y="36" text-anchor="middle" fill="#6f6b64" font-size="12">笔试</text>
+        <text x="272" y="36" text-anchor="middle" fill="#a94d2f" font-size="12" font-weight="700">面试</text>
+        <text x="360" y="36" text-anchor="middle" fill="#6f6b64" font-size="12">Offer</text>
+      </g>
+    </g>
+  </g>
+</svg>
