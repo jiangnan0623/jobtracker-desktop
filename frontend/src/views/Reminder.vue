@@ -526,15 +526,19 @@ async function complete(id: number) {
 }
 
 async function remove(id: number) {
-  await ElMessageBox.confirm('确认删除这个日程？', '删除日程', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm('确认删除这个日程？', '删除日程', { type: 'warning' })
+  } catch {
+    return false
+  }
   await reminderApi.remove(id)
   await load()
+  return true
 }
 
 async function removeFromDialog() {
   if (!form.id) return
-  await remove(form.id)
-  dialogVisible.value = false
+  if (await remove(form.id)) dialogVisible.value = false
 }
 
 function shiftPeriod(offset: number) {

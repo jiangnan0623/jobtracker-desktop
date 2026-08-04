@@ -136,6 +136,14 @@ public class JobApplicationServiceImpl extends ServiceImpl<JobApplicationMapper,
         updateById(application);
     }
 
+    @Override
+    public void deleteByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        removeByIds(ids);
+    }
+
     private void addOption(Set<String> options, String value) {
         if (StringUtils.hasText(value)) {
             options.add(value.trim());

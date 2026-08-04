@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Windows 10 / 11</strong> · Vue 3 · Spring Boot 3 · H2 · 当前桌面包版本 1.2.0
+  <strong>Windows 10 / 11</strong> · Vue 3 · Spring Boot 3 · H2 · 当前桌面包版本 1.2.1
 </p>
 
 <p align="center">
@@ -137,7 +137,7 @@ desktop/build-desktop-full.ps1 -Maven mvn.cmd -Jlink jlink.exe
 
 - **Lite**：不附带 Java 运行时，安装包更小，目标电脑需已有 Java 17。
 - **Full**：附带裁剪后的 Java 运行时，开箱即用。
-- 安装包版本读取自 `desktop/package.json`；当前配置会生成 `1.2.0` 版本的 Lite / Full 安装包。
+- 安装包版本读取自 `desktop/package.json`；当前配置会生成 `1.2.1` 版本的 Lite / Full 安装包。
 - 推送涉及 `backend/`、`frontend/`、`desktop/` 或构建工作流的变更到 `main` 后，GitHub Actions 会自动构建两种 Windows 安装包。
 
 ## 数据与备份

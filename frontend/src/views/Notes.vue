@@ -390,7 +390,11 @@ async function saveSelected() {
 
 async function removeSelected() {
   if (!selected.value?.id) return
-  await ElMessageBox.confirm('删除后会同时移除该文件夹下的子项目，确定继续吗？', '删除确认', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm('删除后会同时移除该文件夹下的子项目，确定继续吗？', '删除确认', { type: 'warning' })
+  } catch {
+    return
+  }
   await noteItemApi.remove(selected.value.id)
   selected.value = null
   editing.value = false

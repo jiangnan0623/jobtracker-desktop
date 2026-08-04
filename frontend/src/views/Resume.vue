@@ -143,18 +143,22 @@ async function save() {
 
 async function remove(id: number) {
   const usage = usageOf(id)
-  if (usage.bindCount > 0) {
-    await ElMessageBox.confirm(
-      `该简历已被 ${usage.bindCount} 条投递记录绑定。删除后，这些投递记录会显示为未绑定简历，是否继续？`,
-      '删除已绑定简历',
-      { confirmButtonText: '继续删除', cancelButtonText: '取消', type: 'warning' }
-    )
-  } else {
-    await ElMessageBox.confirm('确认删除这份简历？', '删除简历', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
+  try {
+    if (usage.bindCount > 0) {
+      await ElMessageBox.confirm(
+        `该简历已被 ${usage.bindCount} 条投递记录绑定。删除后，这些投递记录会显示为未绑定简历，是否继续？`,
+        '删除已绑定简历',
+        { confirmButtonText: '继续删除', cancelButtonText: '取消', type: 'warning' }
+      )
+    } else {
+      await ElMessageBox.confirm('确认删除这份简历？', '删除简历', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+    }
+  } catch {
+    return
   }
   await resumeApi.remove(id)
   ElMessage.success('删除成功')

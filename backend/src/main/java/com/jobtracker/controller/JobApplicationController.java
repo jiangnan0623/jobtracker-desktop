@@ -3,6 +3,7 @@ package com.jobtracker.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jobtracker.common.Result;
 import com.jobtracker.dto.ApplicationQueryDTO;
+import com.jobtracker.dto.BatchApplicationIdsDTO;
 import com.jobtracker.dto.StatusUpdateDTO;
 import com.jobtracker.entity.JobApplication;
 import com.jobtracker.service.JobApplicationService;
@@ -68,6 +69,12 @@ public class JobApplicationController {
     @PatchMapping("/{id}/status")
     public Result<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateDTO dto) {
         jobApplicationService.updateStatus(id, dto.getCurrentStatus());
+        return Result.ok();
+    }
+
+    @DeleteMapping("/batch")
+    public Result<Void> batchDelete(@Valid @RequestBody BatchApplicationIdsDTO dto) {
+        jobApplicationService.deleteByIds(dto.getIds());
         return Result.ok();
     }
 

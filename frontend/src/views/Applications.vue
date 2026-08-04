@@ -20,15 +20,28 @@
       </div>
       <div class="filter-actions">
         <el-segmented v-model="sortMode" :options="sortOptions" />
-        <el-switch v-model="groupByCompany" active-text="按公司合并" />
+        <el-switch v-model="groupByCompany" active-text="按公司合并" :disabled="batchMode" />
         <div class="action-spacer"></div>
         <el-button type="primary" @click="load">查询</el-button>
         <el-button @click="resetQuery">重置</el-button>
         <el-button @click="openCreate">新增岗位</el-button>
+        <el-button :type="batchMode ? 'primary' : undefined" @click="batchMode ? exitBatchMode() : enterBatchMode()">
+          {{ batchMode ? '退出批量管理' : '批量管理' }}
+        </el-button>
       </div>
     </div>
 
-    <el-table :data="displayRows" row-key="rowKey" :tree-props="{ children: 'children' }" default-expand-all>
+    <div v-if="batchMode" class="batch-toolbar">
+      <span class="batch-selection-count">已选 {{ selectedRows.length }} 条</span>
+      <el-button :disabled="allCurrentPageSelected" @click="selectAllCurrentPage">全选当前页</el-button>
+      <el-button :disabled="!selectedRows.length" @click="clearSelection">取消全选</el-button>
+      <el-button type="danger" plain :disabled="!selectedRows.length" @click="batchRemove">批量删除</el-button>
+      <div class="batch-toolbar-spacer"></div>
+      <el-button @click="exitBatchMode">完成</el-button>
+    </div>
+
+    <el-table ref="applicationTableRef" :data="displayRows" row-key="rowKey" :tree-props="{ children: 'children' }" default-expand-all @selection-change="handleSelectionChange">
+      <el-table-column v-if="batchMode" type="selection" width="48" :selectable="selectableRow" />
       <el-table-column prop="companyName" label="公司" min-width="150">
         <template #default="{ row }">
           <el-tooltip :content="row.companyName" placement="top" :disabled="!row.companyName">
@@ -88,7 +101,15 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination v-model:current-page="query.pageNo" v-model:page-size="query.pageSize" :total="total" layout="total, prev, pager, next" @current-change="load" />
+    <el-pagination
+      v-model:current-page="query.pageNo"
+      v-model:page-size="query.pageSize"
+      :total="total"
+      :page-sizes="[10, 20, 50, 100]"
+      layout="total, sizes, prev, pager, next, jumper"
+      @current-change="load"
+      @size-change="handlePageSizeChange"
+    />
   </div>
 
   <el-dialog v-model="dialogVisible" :title="form.id ? '编辑岗位' : '新增岗位'" width="780px">
@@ -185,6 +206,9 @@ const resumeUploading = ref(false)
 const groupByCompany = ref(false)
 const dateRange = ref<string[]>([])
 const sortMode = ref('appliedTime-desc')
+const batchMode = ref(false)
+const selectedRows = ref<ApplicationRow[]>([])
+const applicationTableRef = ref<any>()
 const formPositionTypes = ref<string[]>([])
 const formResumeCategories = ref<string[]>([])
 const sortOptions = [
@@ -289,6 +313,7 @@ async function load() {
   const page: any = await applicationApi.page(queryParams())
   rows.value = page.records
   total.value = page.total
+  clearSelection()
 }
 
 async function loadResumes() {
@@ -356,6 +381,69 @@ function resetQuery() {
   sortMode.value = 'appliedTime-desc'
   dateRange.value = []
   load()
+}
+
+function selectableRow(row: ApplicationRow) {
+  return !row.isGroup
+}
+
+function handleSelectionChange(selection: ApplicationRow[]) {
+  selectedRows.value = selection.filter((row) => !row.isGroup)
+}
+
+function clearSelection() {
+  selectedRows.value = []
+  applicationTableRef.value?.clearSelection()
+}
+
+const allCurrentPageSelected = computed(() => {
+  const currentRows = displayRows.value.filter((row) => !row.isGroup)
+  return currentRows.length > 0 && selectedRows.value.length === currentRows.length
+})
+
+function enterBatchMode() {
+  groupByCompany.value = false
+  query.pageNo = 1
+  batchMode.value = true
+  clearSelection()
+  void load()
+}
+
+function exitBatchMode() {
+  clearSelection()
+  batchMode.value = false
+}
+
+function selectAllCurrentPage() {
+  const table = applicationTableRef.value
+  if (!table) return
+  table.clearSelection()
+  displayRows.value
+    .filter((row) => !row.isGroup)
+    .forEach((row) => table.toggleRowSelection(row, true))
+}
+
+function handlePageSizeChange() {
+  query.pageNo = 1
+  load()
+}
+
+function selectedIds() {
+  return selectedRows.value.map((row) => row.id).filter((id): id is number => typeof id === 'number')
+}
+
+async function batchRemove() {
+  const ids = selectedIds()
+  if (!ids.length) return
+  try {
+    await ElMessageBox.confirm(`确认删除选中的 ${ids.length} 条投递记录吗？此操作无法恢复。`, '批量删除', { type: 'warning' })
+  } catch {
+    return
+  }
+  await applicationApi.batchRemove(ids)
+  ElMessage.success('投递记录已批量删除')
+  if (rows.value.length === ids.length && query.pageNo > 1) query.pageNo -= 1
+  await Promise.all([load(), loadFilterOptions()])
 }
 
 function splitMultiValue(value?: string) {
@@ -475,7 +563,11 @@ async function save() {
 }
 
 async function remove(id: number) {
-  await ElMessageBox.confirm('确认删除这条投递记录？')
+  try {
+    await ElMessageBox.confirm('确认删除这条投递记录？', '删除投递记录', { type: 'warning' })
+  } catch {
+    return
+  }
   await applicationApi.remove(id)
   await load()
 }

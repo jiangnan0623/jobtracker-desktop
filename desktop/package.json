@@ -1,6 +1,6 @@
 {
   "name": "job-tracker-desktop",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "JobTracker desktop client",
   "main": "main.js",
   "private": true,

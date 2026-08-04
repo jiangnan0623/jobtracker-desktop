@@ -974,11 +974,74 @@ select {
 }
 
 .el-message-box {
+  width: min(440px, calc(100vw - 40px));
   padding: 0;
   overflow: hidden;
   background: #fbfaf7;
   border: 1px solid var(--jt-border);
   border-radius: 15px;
+  box-shadow: 0 24px 70px rgba(44, 38, 31, .2);
+}
+
+.el-message-box__header {
+  min-height: 0;
+  padding: 22px 24px 0;
+}
+
+.el-message-box__title {
+  color: var(--jt-text);
+  font-family: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.el-message-box__headerbtn {
+  top: 16px;
+  right: 16px;
+}
+
+.el-message-box__content {
+  padding: 22px 24px 18px;
+}
+
+.el-message-box__message {
+  color: var(--jt-text);
+  line-height: 1.65;
+}
+
+.el-message-box__btns {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 24px 22px;
+}
+
+.batch-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--jt-surface-soft);
+  border: 1px solid var(--jt-border-soft);
+  border-radius: 11px;
+}
+
+.batch-selection-count {
+  color: var(--jt-text);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.batch-toolbar-spacer {
+  margin-left: auto;
+}
+
+.el-pagination {
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .el-popper.is-light,

@@ -15,4 +15,5 @@ public interface JobApplicationService extends IService<JobApplication> {
     List<String> positionTypeOptions();
     List<String> resumeCategoryOptions();
     void updateStatus(Long id, String status);
+    void deleteByIds(List<Long> ids);
 }

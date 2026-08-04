@@ -31,6 +31,7 @@ export const applicationApi = {
   create: (data: JobApplication) => http.post('/applications', data),
   update: (id: number, data: JobApplication) => http.put(`/applications/${id}`, data),
   remove: (id: number) => http.delete(`/applications/${id}`),
+  batchRemove: (ids: number[]) => http.delete('/applications/batch', { data: { ids } }),
   status: (id: number, currentStatus: string) => http.patch(`/applications/${id}/status`, { currentStatus })
 }
 
