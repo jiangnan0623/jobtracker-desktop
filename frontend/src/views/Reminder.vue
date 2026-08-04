@@ -244,7 +244,7 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="quickListVisible" :title="quickListTitle" width="760px">
+  <el-dialog v-model="quickListVisible" :title="quickListTitle" width="760px" @closed="clearRouteQuickList">
     <div v-if="quickListRows.length" class="quick-schedule-list">
       <button
         v-for="item in quickListRows"
@@ -483,6 +483,13 @@ function openRouteQuickList() {
       openQuickList('关联投递', sortedRows.value.filter((item) => item.relatedApplicationId === applicationId))
     }
   }
+}
+
+function clearRouteQuickList() {
+  if (route.path !== '/reminder' || typeof route.query.quick !== 'string') return
+  const query = { ...route.query }
+  delete query.quick
+  void router.replace({ path: route.path, query })
 }
 
 function openEditFromQuickList(row: Reminder) {

@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import * as echarts from 'echarts'
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ChatDotRound, CircleCheck, Collection, EditPen, Medal, Promotion, Star, User, Warning } from '@element-plus/icons-vue'
 import { dashboardApi } from '../api'
 import { formatDateTime, formatTime } from '../utils/time'
@@ -94,11 +94,24 @@ const pieRef = ref<HTMLDivElement>()
 const lineRef = ref<HTMLDivElement>()
 const barRef = ref<HTMLDivElement>()
 const data = ref<any>({})
+const chartInstances: echarts.ECharts[] = []
+let chartResizeObserver: ResizeObserver | undefined
+let chartResizeFrame: number | undefined
+let chartSettleTimer: number | undefined
 
 onMounted(async () => {
   data.value = await dashboardApi.overview()
   await nextTick()
   renderCharts()
+  trackChartSizes()
+})
+
+onBeforeUnmount(() => {
+  chartResizeObserver?.disconnect()
+  window.removeEventListener('resize', scheduleChartResize)
+  if (chartResizeFrame !== undefined) window.cancelAnimationFrame(chartResizeFrame)
+  if (chartSettleTimer !== undefined) window.clearTimeout(chartSettleTimer)
+  chartInstances.splice(0).forEach((chart) => chart.dispose())
 })
 
 function renderCharts() {
@@ -107,13 +120,27 @@ function renderCharts() {
   const chartMuted = '#8b867f'
   const chartGrid = '#e7e2d9'
   const chartPalette = ['#c15f3c', '#7f8f73', '#d2a24c', '#7b829b', '#a66e64', '#5f837d', '#b28a6a']
-  echarts.init(pieRef.value!).setOption({
+  const pieChart = echarts.init(pieRef.value!)
+  chartInstances.push(pieChart)
+  pieChart.setOption({
     color: chartPalette,
-    title: { text: '投递状态分布', textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
+    title: { text: '投递状态分布', left: 0, top: 0, textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
     tooltip: { trigger: 'item' },
-    legend: { textStyle: { color: chartMuted } },
+    legend: {
+      type: 'scroll',
+      top: 2,
+      left: 158,
+      right: 8,
+      itemWidth: 18,
+      itemHeight: 10,
+      pageButtonItemGap: 5,
+      pageIconSize: 11,
+      pageTextStyle: { color: chartMuted },
+      textStyle: { color: chartMuted }
+    },
     series: [{
       type: 'pie',
+      center: ['50%', '59%'],
       radius: ['42%', '66%'],
       padAngle: 2,
       itemStyle: { borderColor: '#fffdf9', borderWidth: 2, borderRadius: 5 },
@@ -122,9 +149,11 @@ function renderCharts() {
     }]
   })
   const trend = data.value.weeklyTrend || {}
-  echarts.init(lineRef.value!).setOption({
+  const lineChart = echarts.init(lineRef.value!)
+  chartInstances.push(lineChart)
+  lineChart.setOption({
     color: [chartPalette[0]],
-    title: { text: '每周投递趋势', textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
+    title: { text: '每周投递趋势', left: 0, top: 0, textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
     tooltip: { trigger: 'axis' },
     grid: { left: 42, right: 20, top: 58, bottom: 34 },
     xAxis: { type: 'category', data: Object.keys(trend), axisLine: { lineStyle: { color: chartGrid } }, axisLabel: { color: chartMuted } },
@@ -140,14 +169,38 @@ function renderCharts() {
     }]
   })
   const company = data.value.companyCount || {}
-  echarts.init(barRef.value!).setOption({
+  const barChart = echarts.init(barRef.value!)
+  chartInstances.push(barChart)
+  barChart.setOption({
     color: [chartPalette[1]],
-    title: { text: '公司投递数量', textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
+    title: { text: '公司投递数量', left: 0, top: 0, textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
     tooltip: { trigger: 'axis' },
     grid: { left: 42, right: 20, top: 58, bottom: 34 },
     xAxis: { type: 'category', data: Object.keys(company), axisLine: { lineStyle: { color: chartGrid } }, axisLabel: { color: chartMuted } },
     yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { color: chartGrid, type: 'dashed' } }, axisLabel: { color: chartMuted } },
     series: [{ type: 'bar', barMaxWidth: 32, itemStyle: { borderRadius: [6, 6, 0, 0] }, data: Object.values(company) }]
+  })
+}
+
+function trackChartSizes() {
+  const elements = [pieRef.value, lineRef.value, barRef.value].filter((item): item is HTMLDivElement => Boolean(item))
+  if ('ResizeObserver' in window) {
+    chartResizeObserver = new ResizeObserver(scheduleChartResize)
+    elements.forEach((element) => chartResizeObserver?.observe(element))
+  }
+  window.addEventListener('resize', scheduleChartResize)
+  document.fonts?.ready.then(scheduleChartResize)
+  scheduleChartResize()
+  chartSettleTimer = window.setTimeout(scheduleChartResize, 360)
+}
+
+function scheduleChartResize() {
+  if (chartResizeFrame !== undefined) window.cancelAnimationFrame(chartResizeFrame)
+  chartResizeFrame = window.requestAnimationFrame(() => {
+    chartResizeFrame = window.requestAnimationFrame(() => {
+      chartResizeFrame = undefined
+      chartInstances.forEach((chart) => chart.resize())
+    })
   })
 }
 
