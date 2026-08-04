@@ -3,15 +3,13 @@
 
   <div class="panel">
     <div class="toolbar">
-      <el-upload :http-request="upload" :show-file-list="false" accept=".pdf,.doc,.docx">
-        <el-button type="primary">上传简历</el-button>
-      </el-upload>
+      <el-button type="primary" @click="openUpload">上传简历</el-button>
       <el-button @click="$router.push('/settings')">保存位置设置</el-button>
     </div>
 
-    <el-table :data="rows">
-      <el-table-column prop="versionName" label="版本名称" min-width="260" show-overflow-tooltip />
-      <el-table-column prop="fileName" label="文件名" min-width="260" show-overflow-tooltip />
+    <el-table :data="rows" class="resume-table">
+      <el-table-column prop="fileName" label="文件名" min-width="300" show-overflow-tooltip />
+      <el-table-column prop="resumeCategory" label="简历类别" min-width="150" show-overflow-tooltip />
       <el-table-column prop="fileType" label="类型" width="80" />
       <el-table-column label="大小" width="100">
         <template #default="{ row }">{{ Math.round(row.fileSize / 1024) }} KB</template>
@@ -45,9 +43,33 @@
     </el-table>
   </div>
 
-  <el-dialog v-model="dialogVisible" title="修改版本信息" width="520px">
+  <el-dialog v-model="uploadVisible" title="上传简历" width="560px" @closed="resetUpload">
     <el-form label-width="90px">
-      <el-form-item label="版本名称"><el-input v-model="form.versionName" /></el-form-item>
+      <el-form-item label="简历文件" required>
+        <el-upload :auto-upload="false" :limit="1" accept=".pdf,.doc,.docx" @change="selectUploadFile" @remove="uploadFile = null">
+          <el-button>选择文件</el-button>
+          <template #tip>支持 PDF、DOC、DOCX 格式</template>
+        </el-upload>
+      </el-form-item>
+      <el-form-item label="简历类别" required>
+        <el-select v-model="uploadCategory" multiple filterable allow-create default-first-option placeholder="选择、输入简历类别，可多选">
+          <el-option v-for="item in resumeCategoryOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="uploadVisible = false">取消</el-button>
+      <el-button type="primary" :loading="uploading" @click="upload">上传</el-button>
+    </template>
+  </el-dialog>
+
+  <el-dialog v-model="dialogVisible" title="编辑简历信息" width="520px">
+    <el-form label-width="90px">
+      <el-form-item label="简历类别">
+        <el-select v-model="form.resumeCategory" multiple filterable allow-create default-first-option placeholder="选择、输入简历类别，可多选">
+          <el-option v-for="item in resumeCategoryOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" /></el-form-item>
     </el-form>
     <template #footer>
@@ -84,19 +106,23 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { resumeApi } from '../api'
+import { resumeApi, resumeCategoryOptions } from '../api'
 import type { Resume, ResumeUsage, ResumeUsageApplication } from '../types'
 
 const rows = ref<Resume[]>([])
 const usageRows = ref<ResumeUsage[]>([])
 const dialogVisible = ref(false)
+const uploadVisible = ref(false)
+const uploading = ref(false)
 const previewVisible = ref(false)
 const usageVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('PDF 预览')
 const usageResumeName = ref('')
 const selectedUsage = ref<ResumeUsage | null>(null)
-const form = reactive({ id: 0, versionName: '', remark: '' })
+const form = reactive({ id: 0, fileName: '', resumeCategory: [] as string[], remark: '' })
+const uploadFile = ref<any>(null)
+const uploadCategory = ref<string[]>([])
 const router = useRouter()
 const usageMap = computed(() => new Map(usageRows.value.map(item => [item.resumeId, item])))
 
@@ -111,13 +137,40 @@ async function load() {
   usageRows.value = usageList as unknown as ResumeUsage[]
 }
 
-async function upload(option: any) {
+function openUpload() {
+  uploadVisible.value = true
+}
+
+function selectUploadFile(file: any) {
+  uploadFile.value = file.raw
+}
+
+function resetUpload() {
+  uploadFile.value = null
+  uploadCategory.value = []
+}
+
+async function upload() {
+  if (!uploadFile.value) {
+    ElMessage.warning('请选择简历文件')
+    return
+  }
+  if (!uploadCategory.value.length) {
+    ElMessage.warning('请选择至少一个简历类别')
+    return
+  }
+  uploading.value = true
   const fd = new FormData()
-  fd.append('file', option.file)
-  fd.append('versionName', option.file.name)
-  await resumeApi.upload(fd)
-  ElMessage.success('上传成功')
-  await load()
+  fd.append('file', uploadFile.value)
+  fd.append('resumeCategory', uploadCategory.value.join('、'))
+  try {
+    await resumeApi.upload(fd)
+    uploadVisible.value = false
+    ElMessage.success('上传成功')
+    await load()
+  } finally {
+    uploading.value = false
+  }
 }
 
 function preview(row: Resume) {
@@ -125,20 +178,24 @@ function preview(row: Resume) {
     ElMessage.warning('当前仅支持 PDF 简历预览')
     return
   }
-  previewTitle.value = row.versionName || row.fileName
+  previewTitle.value = row.fileName
   previewUrl.value = resumeApi.previewUrl(row.id)
   previewVisible.value = true
 }
 
 function openEdit(row: Resume) {
-  Object.assign(form, row)
+  Object.assign(form, row, { resumeCategory: splitCategories(row.resumeCategory) })
   dialogVisible.value = true
 }
 
 async function save() {
-  await resumeApi.update(form.id, form.versionName, form.remark)
+  await resumeApi.update(form.id, form.resumeCategory.join('、'), form.remark)
   dialogVisible.value = false
   await load()
+}
+
+function splitCategories(value?: string) {
+  return value ? value.split(/[、,，]/).map(item => item.trim()).filter(Boolean) : []
 }
 
 async function remove(id: number) {
@@ -179,7 +236,7 @@ function applicationLabel(item: ResumeUsageApplication) {
 
 function openUsage(row: Resume) {
   selectedUsage.value = usageOf(row.id)
-  usageResumeName.value = row.versionName || row.fileName
+  usageResumeName.value = row.fileName
   usageVisible.value = true
 }
 

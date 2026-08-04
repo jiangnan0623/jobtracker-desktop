@@ -45,7 +45,7 @@
         <template #default="{ data }">
           <span class="notes-node" :class="{ selected: data.id === selected?.id }">
             <el-icon><component :is="data.type === 'FOLDER' ? FolderOpened : Document" /></el-icon>
-            <span>{{ data.title }}</span>
+            <span :title="data.title">{{ data.title }}</span>
           </span>
         </template>
       </el-tree>
@@ -58,7 +58,7 @@
             <span class="note-type-tag" :class="fileTypeMeta(selected).className">
               <el-icon><component :is="fileTypeMeta(selected).icon" /></el-icon>{{ fileTypeMeta(selected).label }}
             </span>
-            <h2>{{ selected.title }}</h2>
+            <h2 :title="selected.title">{{ selected.title }}</h2>
           </div>
           <div class="notes-actions">
             <el-button @click="openInfoDialog">

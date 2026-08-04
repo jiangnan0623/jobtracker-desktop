@@ -36,7 +36,7 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume> impleme
     private final JobApplicationMapper jobApplicationMapper;
 
     @Override
-    public Resume upload(MultipartFile file, String versionName, String remark) {
+    public Resume upload(MultipartFile file, String versionName, String resumeCategory, String remark) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("请选择简历文件");
         }
@@ -60,18 +60,22 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume> impleme
         resume.setFileSize(file.getSize());
         resume.setFileType(type);
         resume.setVersionName(StringUtils.hasText(versionName) ? versionName : originalName);
+        resume.setResumeCategory(resumeCategory);
         resume.setRemark(remark);
         save(resume);
         return resume;
     }
 
     @Override
-    public Resume updateInfo(Long id, String versionName, String remark) {
+    public Resume updateInfo(Long id, String versionName, String resumeCategory, String remark) {
         Resume resume = getById(id);
         if (resume == null) {
             throw new IllegalArgumentException("简历不存在");
         }
-        resume.setVersionName(versionName);
+        if (StringUtils.hasText(versionName)) {
+            resume.setVersionName(versionName);
+        }
+        resume.setResumeCategory(resumeCategory);
         resume.setRemark(remark);
         updateById(resume);
         return resume;

@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface ResumeService extends IService<Resume> {
-    Resume upload(MultipartFile file, String versionName, String remark);
-    Resume updateInfo(Long id, String versionName, String remark);
+    Resume upload(MultipartFile file, String versionName, String resumeCategory, String remark);
+    Resume updateInfo(Long id, String versionName, String resumeCategory, String remark);
     List<ResumeUsageVO> usage();
     Map<Long, ResumeUsageVO> usageMap();
     Resource download(Long id);

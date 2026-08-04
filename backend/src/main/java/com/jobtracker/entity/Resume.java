@@ -17,5 +17,6 @@ public class Resume extends BaseEntity {
     private Long fileSize;
     private String fileType;
     private String versionName;
+    private String resumeCategory;
     private String remark;
 }

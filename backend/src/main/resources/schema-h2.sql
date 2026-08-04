@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS resume (
   file_size BIGINT NOT NULL,
   file_type VARCHAR(20) NOT NULL,
   version_name VARCHAR(100) NOT NULL,
+  resume_category VARCHAR(255),
   remark VARCHAR(500),
   created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -21,8 +21,8 @@
       <el-descriptions-item label="简历类别">{{ application.resumeCategory || '-' }}</el-descriptions-item>
       <el-descriptions-item label="绑定简历">
         <div class="bound-resume-info">
-          <span class="bound-resume-name" :title="detail.resume?.versionName || '未绑定'">
-            {{ detail.resume?.versionName || '未绑定' }}
+          <span class="bound-resume-name" :title="detail.resume?.fileName || '未绑定'">
+            {{ detail.resume?.fileName || '未绑定' }}
           </span>
           <el-button
             v-if="detail.resume?.fileType === 'pdf'"
@@ -288,7 +288,7 @@
     <div class="markdown-preview note-dialog-preview" v-html="notePreviewHtml"></div>
   </el-dialog>
 
-  <el-dialog v-model="resumePreviewVisible" :title="detail.resume?.versionName || 'PDF 预览'" width="86%" top="4vh" destroy-on-close>
+  <el-dialog v-model="resumePreviewVisible" :title="detail.resume?.fileName || 'PDF 预览'" width="86%" top="4vh" destroy-on-close>
     <iframe v-if="resumePreviewUrl" class="pdf-preview" :src="resumePreviewUrl"></iframe>
   </el-dialog>
 </template>

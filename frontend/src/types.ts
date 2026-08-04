@@ -49,6 +49,7 @@ export interface Resume {
   fileSize: number
   fileType: string
   versionName: string
+  resumeCategory?: string
   remark?: string
 }
 

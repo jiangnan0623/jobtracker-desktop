@@ -139,7 +139,7 @@
           <el-form-item label="绑定简历">
             <div class="resume-bind-row">
               <el-select v-model="form.resumeId" clearable filterable placeholder="选择已上传简历">
-                <el-option v-for="resume in resumes" :key="resume.id" :label="resume.versionName" :value="resume.id" />
+                <el-option v-for="resume in resumes" :key="resume.id" :label="resume.fileName" :value="resume.id" />
               </el-select>
               <el-upload
                 :http-request="uploadAndBindResume"
@@ -320,24 +320,11 @@ async function loadResumes() {
   resumes.value = await resumeApi.list() as unknown as Resume[]
 }
 
-function buildApplicationResumeName(fileName: string) {
-  const date = new Date()
-  const yyyy = date.getFullYear()
-  const mm = String(date.getMonth() + 1).padStart(2, '0')
-  const dd = String(date.getDate()).padStart(2, '0')
-  const baseName = fileName.replace(/\.[^.]+$/, '')
-  const parts = [form.companyName, form.positionName, baseName, `${yyyy}${mm}${dd}`]
-    .map(item => item?.trim())
-    .filter(Boolean)
-  return parts.join('-') || fileName
-}
-
 async function uploadAndBindResume(option: any) {
   resumeUploading.value = true
   try {
     const fd = new FormData()
     fd.append('file', option.file)
-    fd.append('versionName', buildApplicationResumeName(option.file.name))
     const resume = await resumeApi.upload(fd) as unknown as Resume
     await loadResumes()
     form.resumeId = resume.id

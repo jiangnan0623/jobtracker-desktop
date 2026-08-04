@@ -119,12 +119,13 @@ function renderCharts() {
   const chartText = '#3f3d39'
   const chartMuted = '#8b867f'
   const chartGrid = '#e7e2d9'
+  const chartTitleFont = 'Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif'
   const chartPalette = ['#c15f3c', '#7f8f73', '#d2a24c', '#7b829b', '#a66e64', '#5f837d', '#b28a6a']
   const pieChart = echarts.init(pieRef.value!)
   chartInstances.push(pieChart)
   pieChart.setOption({
     color: chartPalette,
-    title: { text: '投递状态分布', left: 0, top: 0, textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
+    title: { text: '投递状态分布', left: 0, top: 0, textStyle: { color: chartText, fontFamily: chartTitleFont, fontSize: 18, fontWeight: 600 } },
     tooltip: { trigger: 'item' },
     legend: {
       type: 'scroll',
@@ -153,7 +154,7 @@ function renderCharts() {
   chartInstances.push(lineChart)
   lineChart.setOption({
     color: [chartPalette[0]],
-    title: { text: '每周投递趋势', left: 0, top: 0, textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
+    title: { text: '每周投递趋势', left: 0, top: 0, textStyle: { color: chartText, fontFamily: chartTitleFont, fontSize: 18, fontWeight: 600 } },
     tooltip: { trigger: 'axis' },
     grid: { left: 42, right: 20, top: 58, bottom: 34 },
     xAxis: { type: 'category', data: Object.keys(trend), axisLine: { lineStyle: { color: chartGrid } }, axisLabel: { color: chartMuted } },
@@ -173,7 +174,7 @@ function renderCharts() {
   chartInstances.push(barChart)
   barChart.setOption({
     color: [chartPalette[1]],
-    title: { text: '公司投递数量', left: 0, top: 0, textStyle: { color: chartText, fontSize: 16, fontWeight: 600 } },
+    title: { text: '公司投递数量', left: 0, top: 0, textStyle: { color: chartText, fontFamily: chartTitleFont, fontSize: 18, fontWeight: 600 } },
     tooltip: { trigger: 'axis' },
     grid: { left: 42, right: 20, top: 58, bottom: 34 },
     xAxis: { type: 'category', data: Object.keys(company), axisLine: { lineStyle: { color: chartGrid } }, axisLabel: { color: chartMuted } },

@@ -42,15 +42,17 @@ public class ResumeController {
     @PostMapping("/upload")
     public Result<Resume> upload(@RequestParam MultipartFile file,
                                  @RequestParam(required = false) String versionName,
+                                 @RequestParam(required = false) String resumeCategory,
                                  @RequestParam(required = false) String remark) {
-        return Result.ok(resumeService.upload(file, versionName, remark));
+        return Result.ok(resumeService.upload(file, versionName, resumeCategory, remark));
     }
 
     @PutMapping("/{id}")
     public Result<Resume> update(@PathVariable Long id,
-                                 @RequestParam String versionName,
+                                 @RequestParam(required = false) String versionName,
+                                 @RequestParam(required = false) String resumeCategory,
                                  @RequestParam(required = false) String remark) {
-        return Result.ok(resumeService.updateInfo(id, versionName, remark));
+        return Result.ok(resumeService.updateInfo(id, versionName, resumeCategory, remark));
     }
 
     @GetMapping("/{id}/download")
