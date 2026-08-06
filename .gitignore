@@ -17,6 +17,7 @@ data/
 backend/data/
 desktop-test-data/
 desktop-test-data-warning/
+/desktop-data/
 *.log
 *.pid
 *.tmp

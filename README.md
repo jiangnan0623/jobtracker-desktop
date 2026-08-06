@@ -3,87 +3,105 @@
 </p>
 
 <p align="center">
-  <strong>Windows 10 / 11</strong> · Vue 3 · Spring Boot 3 · H2 · 当前桌面包版本 1.2.1
+  <strong>Windows 10 / 11</strong> · Vue 3 · Spring Boot 3 · Electron · H2 · v1.2.2
 </p>
 
 <p align="center">
-  <a href="#实际界面">实际界面</a> ·
-  <a href="#核心能力">核心能力</a> ·
+  <a href="#界面导览">界面导览</a> ·
+  <a href="#完整工作流">完整工作流</a> ·
   <a href="#本地运行">本地运行</a> ·
   <a href="#数据与备份">数据与备份</a> ·
   <a href="./END_USER_MANUAL.md">用户手册</a>
 </p>
 
-JobTracker Desktop（个人求职助手）是一款面向长期求职跟进的本地桌面工具。它把岗位投递、招聘流程、简历版本、面试复盘、笔记资料和日程提醒放进同一个工作台，让每条记录都能回答四个问题：**投了什么、进展如何、用了哪份简历、下一步是什么。**
+JobTracker Desktop（个人求职助手）是一款面向长期求职跟进的本地桌面工具。它把岗位投递、招聘流程、简历版本、面试复盘、笔记资料与日程提醒放进同一个工作台，让每条记录都能回答四个问题：**投了什么、进展如何、用了哪份简历、下一步是什么。**
 
-适用于秋招、春招、实习、提前批、社招、国企、银行和研究所等需要同时跟踪多条流程的场景。应用与数据默认都在本机工作，不依赖远程账号或云端服务。
+应用与数据默认在本机运行，不要求远程账号，也不依赖云端业务服务。
 
-## 实际界面
-
-### 一个视图掌握全局
+## 一眼掌握全局
 
 <p align="center">
-  <img src="./assets/readme/screenshots/dashboard.png" width="100%" alt="Dashboard 界面，展示投递状态分布、每周趋势、公司统计和今日日程">
+  <img src="./assets/readme/screenshots/dashboard.png" width="100%" alt="Dashboard 展示匿名演示数据的投递统计、状态分布、每周趋势和今日日程">
 </p>
 
-Dashboard 汇总投递总量、状态分布、每周趋势、公司统计和待办提醒，打开应用后先看全局，再决定今天最需要推进的事项。
+Dashboard 把投递总量、面试与 Offer、状态分布、趋势、公司统计和今日待办集中在第一屏。状态不是孤立标签：点击日程或投递记录即可继续进入对应岗位上下文。
 
-### 先看全局，再处理下一步
+> 所有截图均来自当前版本的隔离演示环境；姓名、学校、届别、公司、岗位和目录均为虚构或通用示例。
+
+## 界面导览
+
+### 投递管理：让岗位清单始终可扫描
 
 <p align="center">
-  <img src="./assets/readme/screenshots/applications.png" width="100%" alt="投递管理界面，展示岗位筛选、状态标签和投递列表">
+  <img src="./assets/readme/screenshots/applications.png" width="100%" alt="投递管理页展示组合筛选、排序、状态标签、分页和岗位操作">
 </p>
 
-> 截图使用演示数据，不包含真实个人求职信息。
-
-投递列表负责保持全局可扫描：组合筛选、自定义状态、排序和按公司合并可以快速收拢视线；点进任一岗位后，信息会继续展开为一份完整、持续更新的求职档案。
-
-<p align="center">
-  <img src="./assets/readme/workflow.svg" width="100%" alt="从记录岗位、绑定简历、推进流程、安排日程到复盘归档的工作流">
-</p>
-
-### 每个岗位都有自己的上下文
-
-<p align="center">
-  <img src="./assets/readme/screenshots/application-detail.png" width="100%" alt="岗位详情页，展示岗位信息、绑定简历和招聘流程时间轴">
-</p>
-
-在岗位详情中，可以维护当前状态与自定义招聘节点，查看实际绑定的简历版本，保存 Markdown JD、岗位链接和备注，并关联笔试、面试、复盘与截止日程。长流程中的每一次操作都能留在对应岗位下。
+- 按公司、状态、岗位类别、批次、简历类别和时间范围组合筛选。
+- 支持投递时间与公司排序、同公司合并、自定义选项和批量管理。
+- 在列表中直接查看状态、投递时间，并进入详情或继续编辑。
 
 <details>
-<summary><strong>展开更多工作区截图</strong></summary>
+<summary><strong>查看新增岗位与简历命名</strong></summary>
 
-#### 简历版本
-
-<p align="center">
-  <img src="./assets/readme/screenshots/resume.png" width="100%" alt="简历管理界面，展示简历版本、备注和绑定投递数量">
-</p>
-
-#### 求职笔记
+<br>
 
 <p align="center">
-  <img src="./assets/readme/screenshots/notes.png" width="100%" alt="笔记管理界面，展示嵌套目录、Markdown 笔记和内容预览">
+  <img src="./assets/readme/screenshots/applications-create.png" width="100%" alt="新增岗位窗口展示岗位字段、简历绑定和匿名文件名模板预览">
 </p>
 
-#### 日程提醒
-
-<p align="center">
-  <img src="./assets/readme/screenshots/schedule.png" width="100%" alt="日程管理月视图，展示统计、优先级和岗位相关日程">
-</p>
+新增岗位时可以绑定已有简历或上传新版本，并根据姓名、公司、岗位、学校等字段生成投递专用文件名；生成结果只影响展示和下载名称，不会改动原始简历。
 
 </details>
 
-## 核心能力
+### 岗位详情：一条投递拥有完整上下文
 
-| 工作区 | 解决的问题 |
-| --- | --- |
-| **投递管理** | 记录公司、岗位、批次、来源、地点、薪资、JD 和备注；支持筛选、排序、公司合并与自定义状态。 |
-| **招聘流程** | 为每个岗位维护独立流程，用时间轴记录节点、结果和操作时间。 |
-| **简历版本** | 上传、预览、下载并维护不同版本，同时追踪每份简历的实际投递用途。 |
-| **面试复盘** | 记录轮次、时间、面试官、问题、难度和结果，保存 Markdown 复盘笔记。 |
-| **笔记资料** | 组织嵌套文件夹、Markdown、TXT、PDF 和 Word 资料，支持预览、移动与下载。 |
-| **日程联动** | 管理笔试、面试、复盘与截止日期，并把事项关联回具体岗位。 |
-| **全局概览** | 查看投递总量、状态分布、每周趋势、公司统计、最近投递和待办预警。 |
+<p align="center">
+  <img src="./assets/readme/screenshots/application-detail.png" width="100%" alt="岗位详情展示匿名岗位信息、绑定简历和自定义招聘流程时间轴">
+</p>
+
+- 维护岗位信息、Markdown JD、链接、备注和实际绑定的简历版本。
+- 自定义招聘节点，为每一步记录结果与操作时间；Offer 与淘汰作为明确终态。
+- 关联笔试、面试、复盘与截止日程，并保存面试记录和 Markdown 复盘笔记。
+
+### 简历管理：知道每个版本用在了哪里
+
+<p align="center">
+  <img src="./assets/readme/screenshots/resume.png" width="100%" alt="简历管理页展示三个匿名简历版本、类别、绑定数量和操作入口">
+</p>
+
+上传、预览、下载、编辑和删除 PDF / Word 简历；按类别管理不同方向版本，并展开查看每份简历绑定的岗位和对应投递名称。
+
+### 笔记管理：资料、清单与复盘统一归档
+
+<p align="center">
+  <img src="./assets/readme/screenshots/notes.png" width="100%" alt="笔记管理页展示嵌套目录、匿名 Markdown 笔记和渲染预览">
+</p>
+
+支持嵌套文件夹、拖拽移动与移回根目录；可以新建或上传 Markdown、TXT、PDF、Word，预览常用格式并编辑文本内容。
+
+### 日程管理：把下一步真正排进时间表
+
+<p align="center">
+  <img src="./assets/readme/screenshots/schedule.png" width="100%" alt="日程管理月视图展示匿名面试、复盘和截止事项">
+</p>
+
+月、周、日、列表四种视图覆盖不同节奏；日程可设置类型、优先级、重要程度和状态，并与具体投递双向关联。全局未完成预警会持续提示仍需处理的事项。
+
+### 系统设置：文件放哪里、简历叫什么，都由你决定
+
+<p align="center">
+  <img src="./assets/readme/screenshots/settings.png" width="100%" alt="系统设置页使用通用目录和匿名身份字段展示本地保存位置与简历命名规则">
+</p>
+
+分别配置简历、面试笔记和普通笔记目录；维护默认命名信息、预设规则与可复用的自定义模板。截图中的 `D:\JobTrackerData` 仅为通用演示路径。
+
+## 完整工作流
+
+<p align="center">
+  <img src="./assets/readme/workflow.svg" width="100%" alt="从记录岗位、绑定简历、推进流程、安排下一步到复盘归档的本地工作流">
+</p>
+
+一次投递不再散落在表格、文件夹和日历中：岗位是主线，简历、流程、日程、面试与笔记都回到同一条记录。
 
 ## 本地优先
 
@@ -96,9 +114,9 @@ Vue 3 界面
             └── 简历、面试笔记与普通笔记文件
 ```
 
-- 不需要注册远程账号，也不需要部署 MySQL 或业务服务器。
-- 简历、面试笔记和普通笔记可以分别设置本地目录。
-- 数据库与文件目录可以直接纳入自己的备份或同步方案。
+- 不需要注册账号，也不需要部署 MySQL 或业务服务器。
+- H2 数据库、简历、面试笔记和普通笔记都由用户自己的电脑保存。
+- 三类文件目录可分别配置，方便纳入现有备份或同步方案。
 
 ## 本地运行
 
@@ -118,7 +136,7 @@ cd backend
 mvn spring-boot:run
 ```
 
-在另一个终端启动前端：
+另开一个终端启动前端：
 
 ```powershell
 cd frontend
@@ -130,22 +148,26 @@ npm.cmd run dev
 
 ### 构建 Windows 安装包
 
+在JobTrackerDesktop/desktop目录下执行：
+
 ```powershell
-desktop/build-desktop-lite.ps1 -Maven mvn.cmd -Jlink jlink.exe
-desktop/build-desktop-full.ps1 -Maven mvn.cmd -Jlink jlink.exe
+npm run dist:full
+npm run dist:lite
 ```
 
-- **Lite**：不附带 Java 运行时，安装包更小，目标电脑需已有 Java 17。
-- **Full**：附带裁剪后的 Java 运行时，开箱即用。
-- 安装包版本读取自 `desktop/package.json`；当前配置会生成 `1.2.1` 版本的 Lite / Full 安装包。
-- 推送涉及 `backend/`、`frontend/`、`desktop/` 或构建工作流的变更到 `main` 后，GitHub Actions 会自动构建两种 Windows 安装包。
+| 构建 | 适合谁 | Java 运行时 |
+| --- | --- | --- |
+| **Lite** | 已安装 Java 17，希望安装包更小 | 不附带 |
+| **Full** | 希望安装后直接使用 | 附带裁剪后的运行时 |
+
+安装包版本读取自 `desktop/package.json`。推送涉及 `backend/`、`frontend/`、`desktop/` 或构建工作流的变更到 `main` 后，[GitHub Actions](./.github/workflows/build-desktop.yml) 会构建两种 Windows 安装包。
 
 ## 数据与备份
 
-默认数据目录通常位于：
+默认数据目录位于：
 
 ```text
-C:\Users\你的用户名\AppData\Roaming\个人求职助手\
+%APPDATA%\个人求职助手\
 ```
 
 建议定期备份：
@@ -158,21 +180,21 @@ notes\
 storage.properties
 ```
 
-如果在系统设置中修改过保存目录，也需要一并备份对应目录。完整迁移步骤见 [用户使用说明](./END_USER_MANUAL.md#十二换电脑怎么办)。
+如果修改过文件保存目录，也需要一并备份新目录。完整迁移步骤见[用户使用说明](./END_USER_MANUAL.md#十二换电脑怎么办)。
 
 ## 使用边界
 
-- 当前产品面向 Windows 本地使用场景。
-- PDF 和 Word 文件支持预览与管理，不支持直接编辑正文。
-- 修改文件保存位置只影响之后创建或上传的文件，不会自动迁移已有文件。
-- 删除文件夹会同时删除其子项目，请在操作前确认并做好备份。
+- 当前面向 Windows 本地使用场景。
+- PDF 和 Word 支持预览与管理，不支持直接编辑正文。
+- 修改保存位置只影响之后创建或上传的文件，不会自动迁移已有文件。
+- 删除文件夹会同时删除子项目，请先确认并做好备份。
 - 日程只有明确绑定到投递记录后，才会出现在对应岗位详情中。
 
 ## 项目结构
 
 ```text
 JobTrackerDesktop/
-├── frontend/       Vue 3 前端界面
+├── frontend/       Vue 3 + TypeScript 界面
 ├── backend/        Spring Boot 服务与 H2 数据访问
 ├── desktop/        Electron 外壳与 Windows 打包脚本
 ├── database/       数据库脚本与迁移

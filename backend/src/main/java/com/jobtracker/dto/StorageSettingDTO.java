@@ -13,4 +13,11 @@ public class StorageSettingDTO {
 
     @NotBlank(message = "普通笔记目录不能为空")
     private String generalNoteDir;
+
+    private String resumeOwnerName;
+    private String resumeOwnerSchool;
+    private String resumeGraduationYear;
+    private String resumeNamingTemplate;
+    private String resumeCustomNamingTemplate;
+    private String resumeCustomNamingTemplates;
 }

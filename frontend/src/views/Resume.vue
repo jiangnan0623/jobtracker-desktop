@@ -82,18 +82,21 @@
     <iframe v-if="previewUrl" class="pdf-preview" :src="previewUrl"></iframe>
   </el-dialog>
 
-  <el-dialog v-model="usageVisible" :title="`${usageResumeName} - 绑定投递`" width="720px">
+  <el-dialog v-model="usageVisible" :title="`${usageResumeName} - 绑定投递`" width="960px" class="resume-usage-dialog">
     <el-table :data="selectedUsage?.applications || []">
-      <el-table-column label="公司" min-width="160">
+      <el-table-column label="公司" min-width="150">
         <template #default="{ row }">{{ row.companyName || '-' }}</template>
       </el-table-column>
-      <el-table-column label="岗位" min-width="200">
+      <el-table-column label="岗位" min-width="190">
         <template #default="{ row }">{{ row.positionName || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="投递简历名称" min-width="230" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.resumeAlias || '沿用原文件名' }}</template>
       </el-table-column>
       <el-table-column label="状态" width="110">
         <template #default="{ row }">{{ row.currentStatus || '-' }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="100">
+      <el-table-column label="操作" width="88">
         <template #default="{ row }">
           <el-button size="small" link type="primary" @click="goApplication(row.id)">详情</el-button>
         </template>

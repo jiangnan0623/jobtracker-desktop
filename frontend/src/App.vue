@@ -2,7 +2,7 @@
   <el-container class="layout" :class="{ collapsed: sidebarCollapsed, 'has-warning': unfinishedCount > 0 }">
     <el-aside :width="sidebarCollapsed ? '76px' : '248px'" class="sidebar">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">J</span>
+        <img class="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
         <span class="brand-copy" :aria-hidden="sidebarCollapsed">
           <strong class="brand-text">JobTracker</strong>
           <small>求职进度管理</small>
@@ -36,6 +36,21 @@
           <strong>个人求职助手</strong>
         </div>
       </el-header>
+      <nav class="workspace-tabs" aria-label="已打开页面">
+        <div class="workspace-tabs-scroll">
+          <button
+            v-for="tab in workspaceTabs"
+            :key="tab.key"
+            class="workspace-tab"
+            :class="{ active: tab.key === activeTabKey }"
+            :title="tab.label"
+            @click="openTab(tab)"
+          >
+            <span>{{ tab.label }}</span>
+            <el-icon v-if="tab.closable" class="workspace-tab-close" @click.stop="closeTab(tab)"><Close /></el-icon>
+          </button>
+        </div>
+      </nav>
       <button v-if="unfinishedCount > 0" class="global-warning" @click="$router.push('/reminder?quick=pending')">
         <el-icon><Bell /></el-icon>
         <strong>未完成预警</strong>
@@ -50,14 +65,17 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { Bell, DataBoard, Document, Expand, Fold, FolderOpened, Memo, Setting } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Bell, Close, DataBoard, Document, Expand, Fold, FolderOpened, Memo, Setting } from '@element-plus/icons-vue'
 import { reminderApi } from './api'
 import type { Reminder } from './types'
 
 const route = useRoute()
+const router = useRouter()
 const sidebarCollapsed = ref(false)
 const reminders = ref<Reminder[]>([])
+type WorkspaceTab = { key: string; path: string; fullPath: string; label: string; closable: boolean }
+const workspaceTabs = ref<WorkspaceTab[]>([{ key: '/dashboard', path: '/dashboard', fullPath: '/dashboard', label: 'Dashboard', closable: false }])
 let timer: number | undefined
 
 const unfinishedCount = computed(() => reminders.value.filter((item) => item.status === '未完成').length)
@@ -82,4 +100,35 @@ onBeforeUnmount(() => {
 })
 
 watch(() => route.fullPath, loadReminderWarning)
+
+function tabLabel(path: string) {
+  if (path.startsWith('/application/')) return '岗位详情'
+  return ({ '/dashboard': 'Dashboard', '/applications': '投递管理', '/resume': '简历管理', '/notes': '笔记管理', '/reminder': '日程管理', '/settings': '系统设置' } as Record<string, string>)[path] || '工作页'
+}
+
+function syncWorkspaceTab() {
+  const key = route.path
+  const existing = workspaceTabs.value.find((tab) => tab.key === key)
+  if (existing) {
+    existing.fullPath = route.fullPath
+    return
+  }
+  workspaceTabs.value.push({ key, path: route.path, fullPath: route.fullPath, label: tabLabel(route.path), closable: key !== '/dashboard' })
+}
+
+function openTab(tab: WorkspaceTab) { router.push(tab.fullPath) }
+
+function closeTab(tab: WorkspaceTab) {
+  const index = workspaceTabs.value.findIndex((item) => item.key === tab.key)
+  if (index < 0 || !tab.closable) return
+  const isActive = tab.key === route.path
+  workspaceTabs.value.splice(index, 1)
+  if (isActive) {
+    const next = workspaceTabs.value[index - 1] || workspaceTabs.value[index] || workspaceTabs.value[0]
+    router.push(next.fullPath)
+  }
+}
+
+const activeTabKey = computed(() => route.path)
+watch(() => route.fullPath, syncWorkspaceTab, { immediate: true })
 </script>

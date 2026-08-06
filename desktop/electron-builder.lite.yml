@@ -6,8 +6,10 @@ files:
   - main.js
   - preload.js
   - package.json
+  - resources/icon.png
 win:
-  signAndEditExecutable: false
+  icon: resources/icon.ico
+  signAndEditExecutable: true
   target:
     - nsis
 nsis:

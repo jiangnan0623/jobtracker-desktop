@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS job_application (
   position_type VARCHAR(60),
   recruitment_type VARCHAR(40),
   resume_category VARCHAR(80),
+  resume_alias VARCHAR(255),
   work_location VARCHAR(100),
   salary VARCHAR(80),
   source VARCHAR(80),

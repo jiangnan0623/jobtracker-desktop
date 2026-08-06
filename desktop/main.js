@@ -158,6 +158,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 720,
     title: '个人求职助手',
+    icon: path.join(__dirname, 'resources', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

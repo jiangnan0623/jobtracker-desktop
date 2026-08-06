@@ -5,6 +5,7 @@ export interface JobApplication {
   positionType?: string
   recruitmentType?: string
   resumeCategory?: string
+  resumeAlias?: string
   workLocation?: string
   salary?: string
   source?: string
@@ -63,6 +64,7 @@ export interface ResumeUsageApplication {
   id: number
   companyName?: string
   positionName?: string
+  resumeAlias?: string
   currentStatus?: string
 }
 

@@ -19,6 +19,7 @@ public class JobApplication extends BaseEntity {
     private String positionType;
     private String recruitmentType;
     private String resumeCategory;
+    private String resumeAlias;
     private String workLocation;
     private String salary;
     private String source;

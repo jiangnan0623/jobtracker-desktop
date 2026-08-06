@@ -48,6 +48,13 @@ public class StorageSettingServiceImpl implements StorageSettingService {
         dto.setResumeDir(storageProperties.getResumeDir());
         dto.setNoteDir(storageProperties.getNoteDir());
         dto.setGeneralNoteDir(storageProperties.getGeneralNoteDir());
+        Properties properties = loadProperties();
+        dto.setResumeOwnerName(properties.getProperty("resumeOwnerName", ""));
+        dto.setResumeOwnerSchool(properties.getProperty("resumeOwnerSchool", ""));
+        dto.setResumeGraduationYear(properties.getProperty("resumeGraduationYear", ""));
+        dto.setResumeNamingTemplate(properties.getProperty("resumeNamingTemplate", "company"));
+        dto.setResumeCustomNamingTemplate(properties.getProperty("resumeCustomNamingTemplate", ""));
+        dto.setResumeCustomNamingTemplates(properties.getProperty("resumeCustomNamingTemplates", ""));
         return dto;
     }
 
@@ -60,7 +67,7 @@ public class StorageSettingServiceImpl implements StorageSettingService {
         storageProperties.setResumeDir(resumeDir);
         storageProperties.setNoteDir(noteDir);
         storageProperties.setGeneralNoteDir(generalNoteDir);
-        saveSettings();
+        saveSettings(dto);
         return get();
     }
 
@@ -78,11 +85,31 @@ public class StorageSettingServiceImpl implements StorageSettingService {
         }
     }
 
-    private void saveSettings() {
+    private Properties loadProperties() {
         Properties properties = new Properties();
+        Path file = settingFile();
+        if (!Files.exists(file)) {
+            return properties;
+        }
+        try (InputStream input = Files.newInputStream(file)) {
+            properties.load(input);
+            return properties;
+        } catch (IOException e) {
+            throw new IllegalStateException("读取存储设置失败：" + e.getMessage(), e);
+        }
+    }
+
+    private void saveSettings(StorageSettingDTO dto) {
+        Properties properties = loadProperties();
         properties.setProperty("resumeDir", storageProperties.getResumeDir());
         properties.setProperty("noteDir", storageProperties.getNoteDir());
         properties.setProperty("generalNoteDir", storageProperties.getGeneralNoteDir());
+        properties.setProperty("resumeOwnerName", safeValue(dto.getResumeOwnerName()));
+        properties.setProperty("resumeOwnerSchool", safeValue(dto.getResumeOwnerSchool()));
+        properties.setProperty("resumeGraduationYear", safeValue(dto.getResumeGraduationYear()));
+        properties.setProperty("resumeNamingTemplate", safeValue(dto.getResumeNamingTemplate()));
+        properties.setProperty("resumeCustomNamingTemplate", safeValue(dto.getResumeCustomNamingTemplate()));
+        properties.setProperty("resumeCustomNamingTemplates", safeValue(dto.getResumeCustomNamingTemplates()));
         Path file = settingFile();
         try {
             Files.createDirectories(file.getParent());
@@ -96,5 +123,9 @@ public class StorageSettingServiceImpl implements StorageSettingService {
 
     private Path settingFile() {
         return Path.of(dataDir).toAbsolutePath().normalize().resolve("storage.properties");
+    }
+
+    private String safeValue(String value) {
+        return value == null ? "" : value.trim();
     }
 }

@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
 function renderCharts() {
   const status = data.value.statusCount || {}
   const chartText = '#3f3d39'
-  const chartMuted = '#8b867f'
+  const chartMuted = '#625d56'
   const chartGrid = '#e7e2d9'
   const chartTitleFont = 'Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif'
   const chartPalette = ['#c15f3c', '#7f8f73', '#d2a24c', '#7b829b', '#a66e64', '#5f837d', '#b28a6a']

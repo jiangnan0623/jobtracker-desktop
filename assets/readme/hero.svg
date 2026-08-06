@@ -10,9 +10,13 @@
 
   <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">
     <g transform="translate(58 49)">
-      <rect width="53" height="53" rx="16" fill="#c15f3c"/>
-      <text x="26.5" y="37" text-anchor="middle" fill="#fffdf9" font-family="Georgia,serif" font-size="30" font-weight="700">J</text>
-      <text x="72" y="14" dominant-baseline="hanging" fill="#6f6b64" font-size="15" font-weight="700" letter-spacing="2">WINDOWS DESKTOP · LOCAL-FIRST · v1.2.1</text>
+      <rect x="3.3" y="3.3" width="46.4" height="46.4" rx="11.6" fill="#c15f3c"/>
+      <path d="M20.6 13.8H34.3v16.9c0 5.8-4.3 9-9.5 9h-3.7" fill="none" stroke="#fff8ef" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="34.3" cy="19.4" r="2.2" fill="#c15f3c" stroke="#fff8ef" stroke-width="1.4"/>
+      <circle cx="34.3" cy="27.3" r="2.2" fill="#c15f3c" stroke="#fff8ef" stroke-width="1.4"/>
+      <circle cx="20.6" cy="39.6" r="3.8" fill="#87977e" stroke="#fff8ef" stroke-width="1.5"/>
+      <path d="m18.8 39.6 1.2 1.2 2.5-2.8" fill="none" stroke="#fff8ef" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="72" y="14" dominant-baseline="hanging" fill="#6f6b64" font-size="15" font-weight="700" letter-spacing="2">WINDOWS DESKTOP · LOCAL-FIRST · v1.2.2</text>
     </g>
 
     <text x="58" y="137" dominant-baseline="hanging" fill="#2f2d29" font-family="Georgia,'Noto Serif SC','Songti SC',serif" font-size="66" font-weight="700">JobTracker</text>

@@ -15,6 +15,7 @@ public class ResumeUsageVO {
         private Long id;
         private String companyName;
         private String positionName;
+        private String resumeAlias;
         private String currentStatus;
     }
 }

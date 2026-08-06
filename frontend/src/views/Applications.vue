@@ -138,7 +138,7 @@
         <el-col :span="12">
           <el-form-item label="绑定简历">
             <div class="resume-bind-row">
-              <el-select v-model="form.resumeId" clearable filterable placeholder="选择已上传简历">
+              <el-select v-model="form.resumeId" clearable filterable placeholder="选择已上传简历" @change="handleResumeChange">
                 <el-option v-for="resume in resumes" :key="resume.id" :label="resume.fileName" :value="resume.id" />
               </el-select>
               <el-upload
@@ -159,6 +159,16 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <el-form-item label="投递简历名称">
+        <div class="resume-alias-editor">
+          <el-select v-model="namingTemplate" placeholder="选择命名模板" @change="regenerateResumeAlias">
+            <el-option v-for="item in namingTemplates" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+<!--          <el-button @click="regenerateResumeAlias">按模板生成</el-button>-->
+        </div>
+        <el-input v-model="form.resumeAlias" clearable placeholder="选择简历并填写公司、岗位后自动生成，也可手动修改" @input="resumeAliasAuto = false" />
+        <div class="form-item-hint">根据系统设置中的姓名、学校和毕业年份生成；仅影响本次投递的展示与下载文件名，不会复制或改动原简历。</div>
+      </el-form-item>
       <el-row :gutter="12">
         <el-col :span="12"><el-form-item label="工作地点"><el-input v-model="form.workLocation" /></el-form-item></el-col>
         <el-col :span="12"><el-form-item label="薪资"><el-input v-model="form.salary" /></el-form-item></el-col>
@@ -189,9 +199,10 @@
 import { ChatDotRound, CircleCheck, Collection, EditPen, Medal, Promotion, Star, User, Warning } from '@element-plus/icons-vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { applicationApi, recruitmentTypeOptions, resumeApi, resumeCategoryOptions, statusOptions, typeOptions } from '../api'
+import { applicationApi, recruitmentTypeOptions, resumeApi, resumeCategoryOptions, statusOptions, storageApi, typeOptions } from '../api'
 import type { JobApplication, Resume } from '../types'
 import { formatDateTime } from '../utils/time'
+import { parseSavedResumeNamingTemplates, renderResumeName, resumeNamingPresets, templateForSelection } from '../utils/resumeNaming'
 
 type ApplicationRow = JobApplication & { rowKey?: string; isGroup?: boolean; children?: ApplicationRow[] }
 
@@ -211,6 +222,14 @@ const selectedRows = ref<ApplicationRow[]>([])
 const applicationTableRef = ref<any>()
 const formPositionTypes = ref<string[]>([])
 const formResumeCategories = ref<string[]>([])
+const namingTemplate = ref('company')
+const resumeAliasAuto = ref(true)
+const namingSettings = reactive({ resumeOwnerName: '', resumeOwnerSchool: '', resumeGraduationYear: '', resumeCustomNamingTemplate: '', resumeCustomNamingTemplates: '' })
+const namingTemplates = computed(() => [
+  ...resumeNamingPresets,
+  ...parseSavedResumeNamingTemplates(namingSettings.resumeCustomNamingTemplates, namingSettings.resumeCustomNamingTemplate)
+    .map((item) => ({ value: `custom:${item.id}`, label: `自定义 · ${item.name}` }))
+])
 const sortOptions = [
   { label: '投递时间↓', value: 'appliedTime-desc' },
   { label: '投递时间↑', value: 'appliedTime-asc' },
@@ -266,7 +285,19 @@ watch(groupByCompany, () => {
 })
 
 onMounted(async () => {
-  await Promise.all([load(), loadResumes(), loadFilterOptions()])
+  await Promise.all([load(), loadResumes(), loadFilterOptions(), loadNamingSettings()])
+})
+
+watch(() => [
+  form.companyName,
+  form.positionName,
+  form.recruitmentType,
+  form.workLocation,
+  formPositionTypes.value.join('、'),
+  formResumeCategories.value.join('、'),
+  namingTemplate.value
+], () => {
+  if (dialogVisible.value && resumeAliasAuto.value) regenerateResumeAlias()
 })
 
 function emptyForm(): JobApplication {
@@ -320,6 +351,17 @@ async function loadResumes() {
   resumes.value = await resumeApi.list() as unknown as Resume[]
 }
 
+async function loadNamingSettings() {
+  const settings = await storageApi.get() as any
+  namingSettings.resumeOwnerName = settings.resumeOwnerName || ''
+  namingSettings.resumeOwnerSchool = settings.resumeOwnerSchool || ''
+  namingSettings.resumeGraduationYear = settings.resumeGraduationYear || ''
+  namingSettings.resumeCustomNamingTemplate = settings.resumeCustomNamingTemplate || ''
+  namingSettings.resumeCustomNamingTemplates = settings.resumeCustomNamingTemplates || ''
+  const requestedTemplate = settings.resumeNamingTemplate || 'general'
+  namingTemplate.value = namingTemplates.value.some((item) => item.value === requestedTemplate) ? requestedTemplate : 'general'
+}
+
 async function uploadAndBindResume(option: any) {
   resumeUploading.value = true
   try {
@@ -328,6 +370,8 @@ async function uploadAndBindResume(option: any) {
     const resume = await resumeApi.upload(fd) as unknown as Resume
     await loadResumes()
     form.resumeId = resume.id
+    resumeAliasAuto.value = true
+    regenerateResumeAlias()
     ElMessage.success('简历已上传并自动绑定')
   } finally {
     resumeUploading.value = false
@@ -519,10 +563,12 @@ function openCreate() {
     jobDescription: '',
     appliedTime: '',
     resumeId: undefined,
+    resumeAlias: '',
     remark: ''
   })
   formPositionTypes.value = []
   formResumeCategories.value = []
+  resumeAliasAuto.value = true
   dialogVisible.value = true
 }
 
@@ -535,7 +581,42 @@ function openEdit(row: JobApplication) {
   }
   formPositionTypes.value = splitMultiValue(row.positionType)
   formResumeCategories.value = splitMultiValue(row.resumeCategory)
+  resumeAliasAuto.value = false
   dialogVisible.value = true
+}
+
+function handleResumeChange(resumeId?: number) {
+  resumeAliasAuto.value = true
+  if (!resumeId) {
+    form.resumeAlias = ''
+    return
+  }
+  regenerateResumeAlias()
+}
+
+function regenerateResumeAlias() {
+  const resume = resumes.value.find((item) => item.id === form.resumeId)
+  const extension = fileExtension(resume?.fileName)
+  const customTemplates = parseSavedResumeNamingTemplates(namingSettings.resumeCustomNamingTemplates, namingSettings.resumeCustomNamingTemplate)
+  const template = templateForSelection(namingTemplate.value, customTemplates)
+  const name = renderResumeName(template, {
+    ownerName: namingSettings.resumeOwnerName,
+    ownerSchool: namingSettings.resumeOwnerSchool,
+    graduationYear: namingSettings.resumeGraduationYear,
+    companyName: form.companyName,
+    positionName: form.positionName,
+    positionType: formPositionTypes.value.join('、'),
+    recruitmentType: form.recruitmentType,
+    resumeCategory: formResumeCategories.value.join('、'),
+    workLocation: form.workLocation
+  })
+  form.resumeAlias = name ? `${name}${extension}` : (resume?.fileName || '')
+  resumeAliasAuto.value = true
+}
+
+function fileExtension(fileName?: string) {
+  const index = fileName?.lastIndexOf('.') ?? -1
+  return index >= 0 && fileName ? fileName.slice(index) : ''
 }
 
 async function save() {

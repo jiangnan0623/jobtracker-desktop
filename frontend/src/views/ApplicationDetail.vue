@@ -2,24 +2,39 @@
   <h1 class="page-title">{{ application.companyName }} - {{ application.positionName }}</h1>
 
   <div class="panel">
-    <el-descriptions :column="3" border>
-      <el-descriptions-item label="当前状态">
+    <div class="application-summary-grid">
+      <div class="summary-label">当前状态</div>
+      <div class="summary-value">
         <span class="status-pill" :class="statusMeta(application.currentStatus).className">
           <el-icon><component :is="statusMeta(application.currentStatus).icon" /></el-icon>
           <span>{{ application.currentStatus || '-' }}</span>
         </span>
-      </el-descriptions-item>
-      <el-descriptions-item label="进度结果">
+      </div>
+      <div class="summary-label">进度结果</div>
+      <div class="summary-value">
         <el-tag v-if="isTerminalStatus(application.currentStatus)" :type="terminalMeta(application.currentStatus).type">
           {{ terminalMeta(application.currentStatus).label }}
         </el-tag>
         <el-tag v-else :type="resultMeta(application.progressResult).type">{{ application.progressResult || '进行中' }}</el-tag>
-      </el-descriptions-item>
-      <el-descriptions-item label="操作时间">{{ formatDate(application.progressOperatedTime) || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="岗位类别">{{ application.positionType || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="投递批次">{{ application.recruitmentType || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="简历类别">{{ application.resumeCategory || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="绑定简历">
+      </div>
+      <div class="summary-label">操作时间</div>
+      <div class="summary-value summary-value-last">{{ formatDate(application.progressOperatedTime) || '-' }}</div>
+
+      <div class="summary-label">岗位类别</div>
+      <div class="summary-value">{{ application.positionType || '-' }}</div>
+      <div class="summary-label">投递批次</div>
+      <div class="summary-value">{{ application.recruitmentType || '-' }}</div>
+      <div class="summary-label">简历类别</div>
+      <div class="summary-value summary-value-last">{{ application.resumeCategory || '-' }}</div>
+
+      <div class="summary-label">投递简历名称</div>
+      <div class="summary-value">
+        <span class="application-resume-alias" :title="application.resumeAlias || detail.resume?.fileName || '未设置'">
+          {{ application.resumeAlias || detail.resume?.fileName || '未设置' }}
+        </span>
+      </div>
+      <div class="summary-label">绑定简历</div>
+      <div class="summary-value">
         <div class="bound-resume-info">
           <span class="bound-resume-name" :title="detail.resume?.fileName || '未绑定'">
             {{ detail.resume?.fileName || '未绑定' }}
@@ -34,18 +49,38 @@
           >
             预览
           </el-button>
+          <el-button
+            v-if="detail.resume?.id"
+            class="bound-resume-preview"
+            size="small"
+            link
+            type="primary"
+            @click="downloadResumeForApplication"
+          >
+            下载
+          </el-button>
         </div>
-      </el-descriptions-item>
-      <el-descriptions-item label="地点">{{ application.workLocation || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="来源">{{ application.source || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="薪资">{{ application.salary || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="投递时间">{{ formatDate(application.appliedTime) || '-' }}</el-descriptions-item>
-      <el-descriptions-item label="链接" :span="3">
-        <a v-if="application.jobLink" :href="application.jobLink" target="_blank">{{ application.jobLink }}</a>
+      </div>
+      <div class="summary-label">地点</div>
+      <div class="summary-value summary-value-last">{{ application.workLocation || '-' }}</div>
+
+      <div class="summary-label">来源</div>
+      <div class="summary-value">{{ application.source || '-' }}</div>
+      <div class="summary-label">薪资</div>
+      <div class="summary-value">{{ application.salary || '-' }}</div>
+      <div class="summary-label">投递时间</div>
+      <div class="summary-value summary-value-last">{{ formatDate(application.appliedTime) || '-' }}</div>
+
+      <div class="summary-label">链接</div>
+      <div class="summary-value summary-value-wide">
+        <el-tooltip v-if="application.jobLink" :content="application.jobLink" placement="top-start" :show-after="300">
+          <a class="application-link" :href="application.jobLink" target="_blank" rel="noopener noreferrer">{{ application.jobLink }}</a>
+        </el-tooltip>
         <span v-else>-</span>
-      </el-descriptions-item>
-      <el-descriptions-item label="备注" :span="3">{{ application.remark || '-' }}</el-descriptions-item>
-    </el-descriptions>
+      </div>
+      <div class="summary-label">备注</div>
+      <div class="summary-value summary-value-wide">{{ application.remark || '-' }}</div>
+    </div>
   </div>
 
   <div class="panel detail-section">
@@ -396,10 +431,17 @@ const progressItems = computed(() => {
   return flowSteps.value.map((item, index) => {
     const meta = statusMeta(item.name)
     const isCurrent = item.name === current
-    const operatedTime = item.operatedTime || rawTimestampFor(item.name) || (isCurrent ? application.value.progressOperatedTime : '')
+    const isReached = activeEndIndex >= 0 && index <= activeEndIndex && !isTerminalStatus(item.name)
+    // A historical timestamp (such as the filled-in application time) must not make
+    // later steps look completed when the current status has been moved backward.
+    const operatedTime = isReached || isCurrent
+      ? item.operatedTime || rawTimestampFor(item.name) || (isCurrent ? application.value.progressOperatedTime : '')
+      : ''
     const hasRecordedTime = Boolean(operatedTime)
-    const result = isTerminalStatus(item.name) ? '' : item.result || (isCurrent ? application.value.progressResult || '进行中' : '')
-    const active = isCurrent || hasRecordedTime || (activeEndIndex >= 0 && index <= activeEndIndex && !isTerminalStatus(item.name))
+    const result = isTerminalStatus(item.name) || (!isReached && !isCurrent)
+      ? ''
+      : item.result || (isCurrent ? application.value.progressResult || '进行中' : '')
+    const active = isCurrent || hasRecordedTime || isReached
     const terminal = isTerminalStatus(item.name) && (isCurrent || hasRecordedTime)
     return {
       ...item,
@@ -815,5 +857,9 @@ function previewResume() {
   if (!detail.value.resume?.id) return
   resumePreviewUrl.value = resumeApi.previewUrl(detail.value.resume.id)
   resumePreviewVisible.value = true
+}
+
+function downloadResumeForApplication() {
+  window.open(applicationApi.resumeDownloadUrl(jobId), '_blank')
 }
 </script>

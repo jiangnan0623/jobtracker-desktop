@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">JobTracker 应用图标</title>
+  <desc id="desc">字母 J 化作带有进度节点的求职路径，并以绿色终点表示获得 Offer。</desc>
+  <defs>
+    <linearGradient id="bg" x1="160" y1="96" x2="864" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D9754F"/>
+      <stop offset="0.58" stop-color="#C85F3C"/>
+      <stop offset="1" stop-color="#A9432E"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="216" y1="126" x2="680" y2="772" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#6F2D20" flood-opacity=".24"/>
+    </filter>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M192 356C248 190 397 112 604 112c164 0 282 54 356 153v-1 184C834 351 698 302 550 302c-144 0-266 25-358 54Z" fill="url(#shine)"/>
+  <path d="M398 266H662V592c0 112-83 174-184 174h-72" fill="none" stroke="#FFF8EF" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="662" cy="374" r="43" fill="#C85F3C" stroke="#FFF8EF" stroke-width="27"/>
+  <circle cx="662" cy="528" r="43" fill="#C85F3C" stroke="#FFF8EF" stroke-width="27"/>
+  <circle cx="398" cy="766" r="72" fill="#87977E" stroke="#FFF8EF" stroke-width="28"/>
+  <path d="m363 766 24 24 48-54" fill="none" stroke="#FFF8EF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

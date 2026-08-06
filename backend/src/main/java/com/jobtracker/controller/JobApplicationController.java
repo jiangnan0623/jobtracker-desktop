@@ -6,10 +6,17 @@ import com.jobtracker.dto.ApplicationQueryDTO;
 import com.jobtracker.dto.BatchApplicationIdsDTO;
 import com.jobtracker.dto.StatusUpdateDTO;
 import com.jobtracker.entity.JobApplication;
+import com.jobtracker.entity.Resume;
 import com.jobtracker.service.JobApplicationService;
+import com.jobtracker.service.ResumeService;
 import com.jobtracker.vo.ApplicationDetailVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -27,6 +36,7 @@ import java.util.List;
 @RequestMapping("/api/applications")
 public class JobApplicationController {
     private final JobApplicationService jobApplicationService;
+    private final ResumeService resumeService;
 
     @GetMapping
     public Result<Page<JobApplication>> page(ApplicationQueryDTO query) {
@@ -51,6 +61,24 @@ public class JobApplicationController {
     @GetMapping("/{id}")
     public Result<ApplicationDetailVO> detail(@PathVariable Long id) {
         return Result.ok(jobApplicationService.detail(id));
+    }
+
+    @GetMapping("/{id}/resume/download")
+    public ResponseEntity<Resource> downloadResumeForApplication(@PathVariable Long id) {
+        JobApplication application = jobApplicationService.getById(id);
+        if (application == null || application.getResumeId() == null) {
+            throw new IllegalArgumentException("当前投递未绑定简历");
+        }
+        Resume resume = resumeService.getById(application.getResumeId());
+        if (resume == null) {
+            throw new IllegalArgumentException("绑定的简历不存在");
+        }
+        String fileName = resolveDownloadName(application.getResumeAlias(), resume.getFileName());
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
+                .body(resumeService.download(resume.getId()));
     }
 
     @PostMapping
@@ -82,5 +110,21 @@ public class JobApplicationController {
     public Result<Void> delete(@PathVariable Long id) {
         jobApplicationService.removeById(id);
         return Result.ok();
+    }
+
+    private String resolveDownloadName(String alias, String originalName) {
+        String requestedName = StringUtils.hasText(alias) ? alias.trim() : originalName;
+        int originalExtensionIndex = originalName.lastIndexOf('.');
+        if (originalExtensionIndex < 0) {
+            return requestedName;
+        }
+        String extension = originalName.substring(originalExtensionIndex);
+        int requestedExtensionIndex = requestedName.lastIndexOf('.');
+        if (requestedExtensionIndex < 0) {
+            return requestedName + extension;
+        }
+        return requestedName.toLowerCase().endsWith(extension.toLowerCase())
+                ? requestedName
+                : requestedName.substring(0, requestedExtensionIndex) + extension;
     }
 }

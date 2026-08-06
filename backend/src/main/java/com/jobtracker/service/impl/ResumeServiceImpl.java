@@ -121,6 +121,7 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume> impleme
             item.setId(application.getId());
             item.setCompanyName(application.getCompanyName());
             item.setPositionName(application.getPositionName());
+            item.setResumeAlias(application.getResumeAlias());
             item.setCurrentStatus(application.getCurrentStatus());
             usage.getApplications().add(item);
         }
